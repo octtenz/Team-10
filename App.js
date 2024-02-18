@@ -1,3 +1,11 @@
+import { db } from './firebase-config.js';
+import {
+    ref,
+    onValue,
+    push,
+    update,
+    remove
+  } from 'firebase/database';
 import React, { useState } from "react";
 import {
     View,
@@ -36,6 +44,11 @@ const App = () => {
             } else {
                 // Add new goal
                 setGoals([...goals, goal]);
+                
+                push(ref(db, '/Goal List'), {
+                    title: goal,
+                  });
+          
             }
             setGoal("");
             setSubtask("");
@@ -227,7 +240,7 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
     },
     dropdown: {
-      height: 60,
+      height: 50,
       width: 200,
       borderColor: 'Green',
       borderWidth: 2,
