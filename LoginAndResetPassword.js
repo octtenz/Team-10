@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, Button, Image, TextInput, ActivityIndicator, Alert } from 'react-native';
-import { auth } from './firebase-config';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { FIREBASE_AUTH } from './firebase-config';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, getAuth } from 'firebase/auth';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const LoginScreen = ({ navigation }) => {
@@ -10,6 +10,7 @@ const LoginScreen = ({ navigation }) => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const auth = FIREBASE_AUTH;
 
     const handleSignUp = async () => {
         setLoading(true);
@@ -18,7 +19,7 @@ const LoginScreen = ({ navigation }) => {
         try {
             if (isPasswordValid(password)) {
                 const response = await createUserWithEmailAndPassword(auth, email, password);
-                navigation.navigate('Home', { userID: response.user.uid });
+                navigation.navigate('Home', { email: email, password: password });
             } else {
                 setInvalidMessageVisible(true);
             }
@@ -41,7 +42,7 @@ const LoginScreen = ({ navigation }) => {
         try {
             if (isPasswordValid(password)) {
                 const response = await signInWithEmailAndPassword(auth, email, password);
-                navigation.navigate('Home', { userID: response.user.uid });
+                navigation.navigate('Home', { email: email, password: password });
             } else {
                 setInvalidMessageVisible(true);
             }
@@ -49,6 +50,8 @@ const LoginScreen = ({ navigation }) => {
             console.log(error);
             if (error.code === 'auth/invalid-email' || error.code === 'auth/wrong-password') {
                 setInvalidMessageVisible(true);
+            } else if (error.code === 'auth/invalid-credential') {
+                Alert.alert('Sign In failed', 'Invalid user name or password');
             } else if (error.code === 'auth/too-many-requests') {
                 Alert.alert('Sign In failed', 'Too many attempts, try again later');
             } else {
@@ -60,10 +63,9 @@ const LoginScreen = ({ navigation }) => {
     };
 
     const isPasswordValid = (password) => {
-        return true;
-       //return password.length >= 8 && /\d/.test(password) && /[A-Z]/.test(password) && /[a-z]/.test(password);
+        return password.length >= 8 && /\d/.test(password) && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[^A-Za-z0-9]/.test(password);
     };
-
+    
     const handleShowPassword = () => {
         setShowPassword(!showPassword);
     };
@@ -138,8 +140,8 @@ const LoginScreen = ({ navigation }) => {
 
                 <View style={styles.forgetPasswordButton}>
                     <Button
-                        onPress={() => { navigation.navigate('Forget Password') }}
-                        title='Forget Password'
+                        onPress={() => { navigation.navigate('Reset Password') }}
+                        title='Reset Password'
                     />
                 </View>
             </View>
@@ -161,7 +163,7 @@ const LoginScreen = ({ navigation }) => {
                     size='large'
                     color='#0000ff'
                 /> :
-                <View style={styles.buttonRow}>
+                <View style={styles.row}>
                     <View style={styles.buttonView}>
                         <Button
                             onPress={handleSignUp}
@@ -187,6 +189,7 @@ const ResetPasswordScreen = ({ navigation }) => {
     const [sentEmailMessageVisible, setSentEmailMessageVisible] = useState(false);
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
+    const auth = FIREBASE_AUTH;
 
     const handleSentEmail = async () => {
         setLoading(true);
@@ -315,6 +318,8 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderWidth: 2,
         marginBottom: 10,
+        marginLeft: 10,
+        marginRight: 10,
     },
 });
 
