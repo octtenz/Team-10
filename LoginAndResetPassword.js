@@ -140,7 +140,7 @@ const LoginScreen = ({ navigation }) => {
 
                 <View style={styles.forgetPasswordButton}>
                     <Button
-                        onPress={() => { navigation.navigate('Reset Password') }}
+                        onPress={() => { navigation.navigate('Reset Password', { email: email, password: password }) }}
                         title='Reset Password'
                     />
                 </View>
@@ -185,9 +185,9 @@ const LoginScreen = ({ navigation }) => {
     );
 };
 
-const ResetPasswordScreen = ({ navigation }) => {
+const ResetPasswordScreen = ({ navigation, route }) => {
     const [sentEmailMessageVisible, setSentEmailMessageVisible] = useState(false);
-    const [email, setEmail] = useState('');
+    const [email, setEmail] = useState(route.params.email);
     const [loading, setLoading] = useState(false);
     const auth = FIREBASE_AUTH;
 
