@@ -6,7 +6,6 @@ const AddTagsModal = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [newTag, setNewTag] = useState('');
   const [tagOptions, setTagOptions] = useState(['Work', 'School', 'High Priority', 'Low Priority ', 'Personal']);
-  const [selectedTag, setSelectedTag] = useState(null); // State for the selected tag
 
   const saveTag = () => {
     if (newTag.trim() !== '') {
@@ -21,7 +20,7 @@ const AddTagsModal = () => {
     <View style={styles.container}>
       <TouchableOpacity onPress={() => setModalVisible(true)}>
         <View style={styles.addButtonContainer}>
-          <Text style={[styles.addButtonText, { color: 'black', fontWeight: 'bold' }]}>Add Tags</Text>
+          <Text style={styles.addButtonText}>Add Tag</Text>
         </View>
       </TouchableOpacity>
       <Modal
@@ -32,32 +31,30 @@ const AddTagsModal = () => {
       >
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
-            <Text style={styles.modalTitle}>Add Tags</Text>
-            <Text style={styles.tipsText}>Tips: Enter a new tag name or select one from the drop-down list.</Text>
+            <Text style={styles.modalTitle}>Add Tag</Text>
             <View style={styles.tagInputContainer}>
-              <View style={styles.tagInputWrapper}>
-                <TextInput
-                  style={styles.tagInput}
-                  placeholder="Enter tag name"
-                  value={newTag}
-                  onChangeText={(text) => setNewTag(text)}
-                />
-              </View>
+              <TextInput
+                style={styles.tagInput}
+                placeholder="Enter tag name"
+                value={newTag}
+                onChangeText={(text) => setNewTag(text)}
+              />
+              <ModalDropdown
+                style={styles.dropdown}
+                options={tagOptions}
+                onSelect={(index, value) => setNewTag(value)}
+              />
             </View>
-            <ModalDropdown
-              style={styles.dropdown}
-              options={tagOptions}
-              onSelect={(index, value) => setSelectedTag(value)} // Update selected tag when a tag is selected
-            />
+            <Text style={styles.tipText}>Tip: Enter a new tag name or select one from the drop-down list.</Text>
             <View style={styles.buttonContainer}>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <View style={styles.cancelButton}>
-                  <Text style={[styles.buttonText, { color: 'black' }]}>Cancel</Text>
+                  <Text style={styles.buttonText}>Cancel</Text>
                 </View>
               </TouchableOpacity>
               <TouchableOpacity onPress={saveTag}>
                 <View style={styles.saveButton}>
-                  <Text style={[styles.buttonText, { color: 'black' }]}>Save</Text>
+                  <Text style={styles.buttonText}>Save</Text>
                 </View>
               </TouchableOpacity>
             </View>
@@ -91,7 +88,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
-    backgroundColor: 'beige',
+    backgroundColor: 'white',
     borderRadius: 20,
     padding: 35,
     alignItems: 'center',
@@ -101,33 +98,27 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginBottom: 20,
     color: 'black',
-  },
-  tipsText: {
-    marginBottom: 10,
-    textAlign: 'center',
-    color: 'black',
+    fontWeight: 'bold',
   },
   tagInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
-    marginBottom: 10,
-    width: '100%',
-  },
-  tagInputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginBottom: 20,
   },
   tagInput: {
     flex: 1,
     padding: 10,
   },
   dropdown: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
+    paddingHorizontal: 10,
+  },
+  tipText: {
+    color: 'gray',
+    fontStyle: 'italic',
+    marginBottom: 20,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -139,16 +130,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'black',
     borderRadius: 5,
-    paddingVertical: 8,
-    paddingHorizontal: 15,
+    padding: 10,
   },
   saveButton: {
     backgroundColor: 'white',
     borderWidth: 1,
     borderColor: 'black',
     borderRadius: 5,
-    paddingVertical: 8,
-    paddingHorizontal: 15,
+    padding: 10,
   },
   buttonText: {
     fontWeight: 'bold',
