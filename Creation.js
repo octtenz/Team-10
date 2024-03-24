@@ -9,7 +9,10 @@ import {
 import ModalDropdown from 'react-native-modal-dropdown';
 import { FontAwesome } from '@expo/vector-icons';
 
-const CreationScreen = () => {
+import { FIREBASE_DB } from './firebase-config.js';
+import { addDoc, collection } from 'firebase/firestore';
+
+const CreationScreen = ({ navigation, route }) => {
   const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
   const [parentTask, setParentTask] = useState('');
@@ -35,9 +38,10 @@ const CreationScreen = () => {
     setParentTask(value);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim()) {
       console.log('Title field is required');
+      Alert.alert('Title field is required');
       return;
     }
 
@@ -64,10 +68,29 @@ const CreationScreen = () => {
     if (!existingTasks.includes(title)) {
       setExistingTasks((prevTasks) => [...prevTasks, title]);
     }
+
+    const docRef = await addDoc(collection(FIREBASE_DB, "Task (" + route.params.email + ")"), {
+      title,
+      note,
+      parentTask,
+      tag,
+      startDate,
+      dueDate,
+      expectedTime,
+    });
+
+    const docRef2 = await addDoc(collection(FIREBASE_DB, "Activity (" + route.params.email + ")"), {
+      Action: "ADD",
+      TaskID: docRef.id
+    });
+
+    navigation.navigate('Home', route.params);
   };
 
   const handleCancel = () => {
     console.log('Cancelled');
+
+    navigation.navigate('Home', route.params);
   };
 
   const addTag = () => {
