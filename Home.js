@@ -1,17 +1,14 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
 
-const HomeScreen = () => {
-  const navigation = useNavigation();
-
+const HomeScreen = ({ navigation, route }) => {
   const goToCreation = () => {
-    navigation.navigate('Creation');
+    navigation.navigate('Creation', route.params);
   };
 
     const goToSettings = () => {
-    navigation.navigate('Settings');
+    navigation.navigate('Settings', route.params);
   };
 
   return (
