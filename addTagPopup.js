@@ -2,15 +2,21 @@ import React, { useState } from 'react';
 import { View, Text, Modal, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import ModalDropdown from 'react-native-modal-dropdown';
 
-const AddTagsModal = () => {
+const AddTagsModal = ({ onTagSelect }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [newTag, setNewTag] = useState('');
   const [tagOptions, setTagOptions] = useState(['Work', 'School', 'High Priority', 'Low Priority ', 'Personal']);
 
+  const handleTagSelect = (tag) => {
+    onTagSelect(tag); 
+    setModalVisible(false); 
+  };
+
   const saveTag = () => {
     if (newTag.trim() !== '') {
       console.log('Tag saved:', newTag);
-      setTagOptions([...tagOptions, newTag]); // Add new tag to tagOptions
+      setTagOptions([...tagOptions, newTag]); 
+      handleTagSelect(newTag);
       setNewTag('');
     }
     setModalVisible(false);
@@ -42,7 +48,7 @@ const AddTagsModal = () => {
               <ModalDropdown
                 style={styles.dropdown}
                 options={tagOptions}
-                onSelect={(index, value) => setNewTag(value)}
+                onSelect={(index, value) => handleTagSelect(value)}
               />
             </View>
             <Text style={styles.tipText}>Tip: Enter a new tag name or select one from the drop-down list.</Text>

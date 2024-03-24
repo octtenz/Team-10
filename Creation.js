@@ -22,6 +22,7 @@ const CreationScreen = ({ navigation, route }) => {
     { text: 'school', selected: false },
     { text: 'work', selected: false },
   ]);
+  const [selectedTags, setSelectedTags] = useState([]);
   const [startDateDay, setStartDateDay] = useState('');
   const [startDateMonth, setStartDateMonth] = useState('');
   const [startDateYear, setStartDateYear] = useState('');
@@ -94,29 +95,20 @@ const CreationScreen = ({ navigation, route }) => {
     navigation.navigate('Home', route.params);
   };
 
-  const addTag = () => {
-    if (tag.trim() !== '' && !tags.includes(tag)) {
-      setTags([...tags, tag]);
-      setTag('');
-    }
+  const removeTag = (index) => {
+    const updatedTags = [...selectedTags];
+    updatedTags.splice(index, 1);
+    setSelectedTags(updatedTags);
   };
 
-  const removeTag = (indexToRemove) => {
-    setTags(tags.filter((_, index) => index !== indexToRemove));
+  const handleTagSelect = (tag) => {
+    setSelectedTags([...selectedTags, { text: tag, selected: false }]);
   };
 
-  const toggleTagSelection = (index) => {
-    const updatedTags = tags.map((t, i) => {
-      if (i === index) {
-        return {
-          ...t,
-          selected: !t.selected,
-        };
-      } else {
-        return t;
-      }
-    });
-    setTags(updatedTags);
+  const toggleTagSelection = (tag) => {
+    const updatedTags = [...selectedTags];
+    updatedTags[index].selected = !updatedTags[index].selected;
+    setSelectedTags(updatedTags);
   };
 
   return (
@@ -149,27 +141,25 @@ const CreationScreen = ({ navigation, route }) => {
       <View style={styles.tagContainer}>
         <Text style={styles.label}>Tag:</Text>
         <View style={styles.tagInputs}>
-          {tags.map((tag, index) => (
-            <View key={index} style={styles.tag}>
-              <TouchableOpacity
-                key={index}
-                onPress={() => toggleTagSelection(index)}
-                style={[
-                  styles.tag,
-                  {
-                    backgroundColor: tag.selected ? '#add8e6' : '#e6e6e6',
-                  },
-                ]}
-              >
-                <Text style={styles.tagText}>{tag.text}</Text>
-                <TouchableOpacity onPress={() => removeTag(index)}>
-                  <FontAwesome name="times" size={15} color="red" />
-                </TouchableOpacity>
+          {selectedTags.map((tag, index) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() => toggleTagSelection(index)}
+              style={[
+                styles.tag,
+                {
+                  backgroundColor: tag.selected ? '#add8e6' : '#e6e6e6',
+                },
+              ]}
+            >
+              <Text style={styles.tagText}>{selectedTags.text}</Text>
+              <TouchableOpacity onPress={() => removeTag(index)}>
+                <FontAwesome name="times" size={15} color="red" />
               </TouchableOpacity>
-            </View>
+            </TouchableOpacity>
           ))}
-          <AddTagsModal/>
         </View>
+        <AddTagsModal onTagSelect={handleTagSelect} />
       </View>
       <View style={styles.dateInputContainer}>
         <Text style={styles.label}>Start Date:</Text>
