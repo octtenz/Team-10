@@ -11,6 +11,7 @@ import { FontAwesome } from '@expo/vector-icons';
 
 import { FIREBASE_DB } from './firebase-config.js';
 import { addDoc, collection } from 'firebase/firestore';
+import AddTagsModal from './addTagPopup.js';
 
 const CreationScreen = ({ navigation, route }) => {
   const [title, setTitle] = useState('');
@@ -167,9 +168,7 @@ const CreationScreen = ({ navigation, route }) => {
               </TouchableOpacity>
             </View>
           ))}
-          <TouchableOpacity onPress={addTag}>
-            <FontAwesome name="plus-circle" size={30} color="black" />
-          </TouchableOpacity>
+          <AddTagsModal/>
         </View>
       </View>
       <View style={styles.dateInputContainer}>

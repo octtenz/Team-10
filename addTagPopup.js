@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, Modal, StyleSheet, TextInput, TouchableOpacity, Picker } from 'react-native';
+import { View, Text, Modal, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import ModalDropdown from 'react-native-modal-dropdown';
 
 const AddTagsModal = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [newTag, setNewTag] = useState('');
-  const [selectedTag, setSelectedTag] = useState('');
-  const tagOptions = ['Work', 'School', 'High Priority', 'Low Priority ', 'Personal'];
+  const [tagOptions, setTagOptions] = useState(['Work', 'School', 'High Priority', 'Low Priority ', 'Personal']);
+  const [selectedTag, setSelectedTag] = useState(null); // State for the selected tag
 
   const saveTag = () => {
     if (newTag.trim() !== '') {
       console.log('Tag saved:', newTag);
+      setTagOptions([...tagOptions, newTag]); // Add new tag to tagOptions
       setNewTag('');
-    } else if (selectedTag !== '') {
-      console.log('Tag saved:', selectedTag);
-      setSelectedTag('');
     }
     setModalVisible(false);
   };
@@ -22,16 +21,14 @@ const AddTagsModal = () => {
     <View style={styles.container}>
       <TouchableOpacity onPress={() => setModalVisible(true)}>
         <View style={styles.addButtonContainer}>
-          <Text style={[styles.addButtonText, {color: 'black', fontWeight: 'bold'}]}>Add Tags</Text>
+          <Text style={[styles.addButtonText, { color: 'black', fontWeight: 'bold' }]}>Add Tags</Text>
         </View>
       </TouchableOpacity>
       <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => {
-          setModalVisible(false);
-        }}
+        onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
@@ -45,30 +42,22 @@ const AddTagsModal = () => {
                   value={newTag}
                   onChangeText={(text) => setNewTag(text)}
                 />
-                <TouchableOpacity onPress={() => setModalVisible(true)}>
-                </TouchableOpacity>
               </View>
             </View>
-            <Picker
-              style={[styles.picker, {marginBottom: 20, display: modalVisible ? 'flex' : 'none'}]}
-              selectedValue={selectedTag}
-              onValueChange={(itemValue) => setSelectedTag(itemValue)}
-              mode="dropdown"
-              prompt="Select tag"
-            >
-              {tagOptions.map((tag, index) => (
-                <Picker.Item key={index} label={tag} value={tag} />
-              ))}
-            </Picker>
+            <ModalDropdown
+              style={styles.dropdown}
+              options={tagOptions}
+              onSelect={(index, value) => setSelectedTag(value)} // Update selected tag when a tag is selected
+            />
             <View style={styles.buttonContainer}>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <View style={styles.cancelButton}>
-                  <Text style={[styles.buttonText, {color: 'black'}]}>Cancel</Text>
+                  <Text style={[styles.buttonText, { color: 'black' }]}>Cancel</Text>
                 </View>
               </TouchableOpacity>
               <TouchableOpacity onPress={saveTag}>
                 <View style={styles.saveButton}>
-                  <Text style={[styles.buttonText, {color: 'black'}]}>Save</Text>
+                  <Text style={[styles.buttonText, { color: 'black' }]}>Save</Text>
                 </View>
               </TouchableOpacity>
             </View>
@@ -99,10 +88,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', 
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
-    backgroundColor: 'beige', 
+    backgroundColor: 'beige',
     borderRadius: 20,
     padding: 35,
     alignItems: 'center',
@@ -133,13 +122,12 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
   },
-  dropdownButton: {
-    paddingHorizontal: 10,
-    fontSize: 18,
-    color: 'black',
-  },
-  picker: {
+  dropdown: {
     width: '100%',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
   },
   buttonContainer: {
     flexDirection: 'row',
