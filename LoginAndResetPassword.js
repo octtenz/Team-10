@@ -3,6 +3,8 @@ import { StyleSheet, Text, View, Button, Image, TextInput, ActivityIndicator, Al
 import { FIREBASE_AUTH } from './firebase-config';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, getAuth } from 'firebase/auth';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import EmailPopup from './emailPopup.js';
+import PasswordPopup from './passwordPopup.js';
 
 const LoginScreen = ({ navigation }) => {
     const [invalidMessageVisible, setInvalidMessageVisible] = useState(false);
@@ -10,6 +12,8 @@ const LoginScreen = ({ navigation }) => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [emailModalVisible, setEmailModalVisible] = useState(false); 
+    const [passwordModalVisible, setPasswordModalVisible] = useState(false); 
     const auth = FIREBASE_AUTH;
 
     const handleSignUp = async () => {
@@ -71,11 +75,11 @@ const LoginScreen = ({ navigation }) => {
     };
 
     const emailHintPopUp = () => {
-        // Handle email hint popup
+        setEmailModalVisible(!emailModalVisible);
     };
 
     const passwordHintPopUp = () => {
-
+        setPasswordModalVisible(!passwordModalVisible); 
     }
 
     return (
@@ -92,7 +96,7 @@ const LoginScreen = ({ navigation }) => {
                         size={24}
                         onPress={emailHintPopUp}
                     />
-
+                    <EmailPopup modalVisible={emailModalVisible} handleCloseModal={emailHintPopUp} />
                     <Text style={styles.label}>Enter Your Email:</Text>
                 </View>
 
@@ -115,7 +119,7 @@ const LoginScreen = ({ navigation }) => {
                         size={24}
                         onPress={passwordHintPopUp}
                     />
-
+                    <PasswordPopup modalVisible={passwordModalVisible} handleCloseModal={passwordHintPopUp} /> 
                     <Text style={styles.label}>Enter Your Password:</Text>
                 </View>
 
@@ -147,13 +151,13 @@ const LoginScreen = ({ navigation }) => {
             </View>
 
             <Text style={[styles.messageText, { opacity: invalidMessageVisible ? 1 : 0 }, { color: 'red' }]}>
-                Sorry, your email address or password is in invalid format! Please click
+                Sorry, your email address or password is in invalid format! Please click for hint.
                 <MaterialCommunityIcons
                     name={'information-outline'}
                     size={24}
                     onPress={emailHintPopUp}
                 />
-                for hint.
+                <EmailPopup modalVisible={emailModalVisible} handleCloseModal={emailHintPopUp} />
             </Text>
 
             <Text style={styles.messageText}>By clicking Sign up, you are agreeing to allowing us to store and analyze your data.</Text>
@@ -189,6 +193,7 @@ const ResetPasswordScreen = ({ navigation, route }) => {
     const [sentEmailMessageVisible, setSentEmailMessageVisible] = useState(false);
     const [email, setEmail] = useState(route.params.email);
     const [loading, setLoading] = useState(false);
+    const [emailModalVisible, setEmailModalVisible] = useState(false); 
     const auth = FIREBASE_AUTH;
 
     const handleSentEmail = async () => {
@@ -207,7 +212,7 @@ const ResetPasswordScreen = ({ navigation, route }) => {
     };
 
     const emailHintPopUp = () => {
-        // Handle email hint popup
+        setEmailModalVisible(!emailModalVisible);
     };
 
     return (
@@ -224,6 +229,7 @@ const ResetPasswordScreen = ({ navigation, route }) => {
                         size={24}
                         onPress={emailHintPopUp}
                     />
+                    <EmailPopup modalVisible={emailModalVisible} handleCloseModal={emailHintPopUp} />
 
                     <Text style={styles.label}>Enter Your Email:</Text>
                 </View>
