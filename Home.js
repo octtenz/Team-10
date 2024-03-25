@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
+import React, {useEffect, useState} from 'react';
+import {FlatList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {FontAwesome} from '@expo/vector-icons';
+import {FIREBASE_DB} from './firebase-config.js';
 
 const HomeScreen = ({ navigation, route }) => {
   const goToCreation = () => {
@@ -11,10 +12,24 @@ const HomeScreen = ({ navigation, route }) => {
     navigation.navigate('Settings', route.params);
   };
 
+    const [tasks, setTasks] = useState([]);
+
+    useEffect(() => {
+        const loadTasks = async () => {
+          const querySnapshot = await FIREBASE_DB.collection("Activity (" + route.params.email + ")").get();
+          setTasks(querySnapshot);
+        }
+        loadTasks();
+      }, [setTasks]);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Home Screen</Text>
-      {/* Your home screen content here */}
+      <FlatList
+          data={tasks[index] || []}
+          renderItem={({tasks}) => <Text style={styles.subtask}>{tasks}</Text>}
+          keyExtractor={(tasks, index) => index.toString()}
+      />
       <TouchableOpacity onPress={goToSettings} style={[styles.settingButton, styles.button]}>
         <FontAwesome name="cog" size={24} color="black" />
       </TouchableOpacity>
@@ -56,6 +71,9 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  subtask: {
+    marginBottom: 10,
   },
 });
 
