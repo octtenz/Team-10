@@ -12,14 +12,6 @@ const TaskList = () => {
         }
         loadTasks();
     }, [setTasks]);
-
-    return (
-        <FlatList data={locations}
-                  renderItem={({ tasks }) => (
-                      ...
-                      )}
-        />
-    )
 }
 
 export default TaskList;

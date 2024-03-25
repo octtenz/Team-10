@@ -27,8 +27,8 @@ const HomeScreen = ({ navigation, route }) => {
       <Text style={styles.title}>Home Screen</Text>
       <FlatList
           data={tasks[index] || []}
-          renderItem={({tasks}) => <Text style={styles.subtask}>{tasks}</Text>}
-          keyExtractor={(tasks, index) => index.toString()}
+          renderItem={({item}) => <Text style={styles.subtask}>{item}</Text>}
+          keyExtractor={(item, index) => index.toString()}
       />
       <TouchableOpacity onPress={goToSettings} style={[styles.settingButton, styles.button]}>
         <FontAwesome name="cog" size={24} color="black" />
