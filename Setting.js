@@ -3,18 +3,15 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 const SettingScreen = ({ navigation, route}) => {
   const handleChangePassword = () => {
-    // Handle navigation to change password screen
     navigation.navigate('Reset Password', route.params);
   };
 
   const handleReviewAnalysisReport = () => {
-    // Handle navigation to review analysis report screen
     console.log('Navigating to review analysis report screen');
   };
 
-  // Mock email and password values (replace with actual values from Firebase)
   const email = route.params.email;
-  const password = route.params.password; // You may want to obscure the password for security reasons
+  const password = route.params.password;
 
   return (
     <View style={styles.container}>

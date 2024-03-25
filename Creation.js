@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import ModalDropdown from 'react-native-modal-dropdown';
 import { FontAwesome } from '@expo/vector-icons';
@@ -12,16 +13,12 @@ import { FontAwesome } from '@expo/vector-icons';
 import { FIREBASE_DB } from './firebase-config.js';
 import { addDoc, collection } from 'firebase/firestore';
 import AddTagsModal from './addTagPopup.js';
+import SetReminderScreen from './setReminderPopup.js';
 
 const CreationScreen = ({ navigation, route }) => {
   const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
   const [parentTask, setParentTask] = useState('');
-  const [tag, setTag] = useState('');
-  const [tags, setTags] = useState([
-    { text: 'school', selected: false },
-    { text: 'work', selected: false },
-  ]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [startDateDay, setStartDateDay] = useState('');
   const [startDateMonth, setStartDateMonth] = useState('');
@@ -61,7 +58,7 @@ const CreationScreen = ({ navigation, route }) => {
       title,
       note,
       parentTask,
-      tag,
+      selectedTags,
       startDate,
       dueDate,
       expectedTime,
@@ -75,7 +72,7 @@ const CreationScreen = ({ navigation, route }) => {
       title,
       note,
       parentTask,
-      tag,
+      selectedTags,
       startDate,
       dueDate,
       expectedTime,
@@ -105,7 +102,7 @@ const CreationScreen = ({ navigation, route }) => {
     setSelectedTags([...selectedTags, { text: tag, selected: false }]);
   };
 
-  const toggleTagSelection = (tag) => {
+  const toggleTagSelection = (index) => {
     const updatedTags = [...selectedTags];
     updatedTags[index].selected = !updatedTags[index].selected;
     setSelectedTags(updatedTags);
@@ -152,7 +149,7 @@ const CreationScreen = ({ navigation, route }) => {
                 },
               ]}
             >
-              <Text style={styles.tagText}>{selectedTags.text}</Text>
+              <Text style={styles.tagText}>{tag.text}</Text>
               <TouchableOpacity onPress={() => removeTag(index)}>
                 <FontAwesome name="times" size={15} color="red" />
               </TouchableOpacity>
@@ -219,12 +216,15 @@ const CreationScreen = ({ navigation, route }) => {
           />
         </View>
       </View>
-      <TextInput
-        style={styles.input}
-        placeholder="Expected Time to Complete"
-        value={expectedTime}
-        onChangeText={setExpectedTime}
-      />
+      <View style={styles.reminderContainer}>
+        <TextInput
+          style={styles.expectedTime}
+          placeholder="Expected Time to Complete"
+          value={expectedTime}
+          onChangeText={setExpectedTime}
+        />
+        <SetReminderScreen/>
+      </View>
       <Text style={styles.hintText}>Hint: Only title field is required</Text>
       <TouchableOpacity style={styles.button} onPress={handleCancel}>
         <Text style={styles.buttonText}>Cancel</Text>
@@ -254,8 +254,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 5
-,
+    borderRadius: 5,
     padding: 10,
     marginBottom: 10,
     width: '100%',
@@ -350,6 +349,17 @@ const styles = StyleSheet.create({
   },
   yearInput: {
     marginRight: 0,
+  },
+  reminderContainer: {
+    flexDirection: 'row',
+  },
+  expectedTime: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    width: '60%',
+    marginRight: 10,
   },
   hintText: {
     fontSize: 12,

@@ -1,32 +1,33 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, Alert} from 'react-native';
+import { FontAwesome } from '@expo/vector-icons';
 
 const SetReminderScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
-  const [reminders, setReminders] = useState([]);
   const [day, setDay] = useState('');
   const [month, setMonth] = useState('');
   const [year, setYear] = useState('');
+  const [hour, setHour] = useState('');
+  const [minute, setMinute] = useState('');
 
   const addReminder = () => {
-    if (day && month && year) {
-      setReminders([...reminders, { day, month, year }]);
-      setDay('');
-      setMonth('');
-      setYear('');
+    if (day && month && year && hour && minute) {
+      const notificationDate = new Date(year, month, day - 1, hour, minute);
+      if (notificationDate > Date.now()) {
+        console.log('Adding Reminder:', day, month, year, hour, minute);
+        setModalVisible(false); 
+      } else {
+        Alert.alert('Invalid Date/Time', 'Please select a future date and time.');
+      }
+    } else {
+      Alert.alert('Incomplete Date/Time', 'Please fill in all fields to set reminder.');
     }
-  };
-
-  const deleteReminder = (index) => {
-    const newReminders = [...reminders];
-    newReminders.splice(index, 1);
-    setReminders(newReminders);
   };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => setModalVisible(true)}>
-        <Text>Set Reminders</Text>
+      <TouchableOpacity style={styles.button} onPress={() => setModalVisible(true)}>
+        <Text style={styles.buttonText}>Set Reminder</Text>
       </TouchableOpacity>
       <Modal
         animationType="slide"
@@ -38,48 +39,60 @@ const SetReminderScreen = () => {
       >
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
-            <Text style={styles.modalText}>Set Reminder</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Day"
-              value={day}
-              onChangeText={setDay}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Month"
-              value={month}
-              onChangeText={setMonth}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Year"
-              value={year}
-              onChangeText={setYear}
-            />
-            <TouchableOpacity onPress={addReminder}>
-              <Text>Add Reminder</Text>
-            </TouchableOpacity>
-            {reminders.map((reminder, index) => (
-              <View key={index} style={styles.reminder}>
-                <View style={styles.dateBox}>
-                  <Text>{`${reminder.day}/${reminder.month}/${reminder.year}`}</Text>
-                </View>
-                {index === 0 ? (
-                  <TouchableOpacity onPress={() => deleteReminder(index)}>
-                    <View style={styles.deleteButton}>
-                      <Text style={styles.deleteText}>Delete</Text>
-                    </View>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity onPress={() => deleteReminder(index)}>
-                    <View style={styles.deleteButton}>
-                      <Text style={styles.deleteText}>Delete</Text>
-                    </View>
-                  </TouchableOpacity>
-                )}
+            <Text style={styles.modalTitle}>Set Reminder</Text>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Date (DD/MM/YYYY):</Text>
+              <View style={styles.inputRow}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="DD"
+                  value={day}
+                  onChangeText={setDay}
+                  keyboardType="numeric"
+                  maxLength={2}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="MM"
+                  value={month}
+                  onChangeText={setMonth}
+                  keyboardType="numeric"
+                  maxLength={2}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="YYYY"
+                  value={year}
+                  onChangeText={setYear}
+                  keyboardType="numeric"
+                  maxLength={4}
+                />
               </View>
-            ))}
+            </View>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Time (HH/MM):</Text>
+              <View style={styles.inputRow}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="HH"
+                  value={hour}
+                  onChangeText={setHour}
+                  keyboardType="numeric"
+                  maxLength={2}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="MM"
+                  value={minute}
+                  onChangeText={setMinute}
+                  keyboardType="numeric"
+                  maxLength={2}
+                />
+              </View>
+            </View>
+            <TouchableOpacity onPress={addReminder}>
+              <FontAwesome name="bell" size={24} color="black" />
+            </TouchableOpacity>
             <TouchableOpacity onPress={() => setModalVisible(false)}>
               <Text style={styles.closeButton}>Close</Text>
             </TouchableOpacity>
@@ -100,52 +113,53 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // light beige box
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', 
   },
   modalView: {
-    backgroundColor: 'beige', // light beige box
+    backgroundColor: 'white',
     borderRadius: 20,
     padding: 35,
     alignItems: 'center',
     width: '80%',
   },
-  modalText: {
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
     marginBottom: 15,
-    textAlign: 'center',
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 5,
   },
   input: {
     borderWidth: 1,
-    borderColor: 'gray',
+    borderColor: '#ccc',
     borderRadius: 5,
-    padding: 5,
-    marginBottom: 10,
-    width: 200,
-  },
-  reminder: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    marginTop: 10,
-  },
-  dateBox: {
-    backgroundColor: '#f0f0f0',
-    padding: 5,
-    borderRadius: 5,
+    padding: 10,
     marginRight: 10,
-  },
-  deleteButton: {
-    backgroundColor: 'red',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-  },
-  deleteText: {
-    color: 'white',
+    width: 60, 
   },
   closeButton: {
     marginTop: 10,
     color: 'blue',
+  },
+  button: {
+    backgroundColor: '#007BFF',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+    width: '100%',
+  },
+  buttonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
   },
 });
 
