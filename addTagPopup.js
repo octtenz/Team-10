@@ -78,14 +78,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   addButtonContainer: {
-    padding: 10,
+    padding: 15,
     borderRadius: 5,
-    borderWidth: 1,
-    borderColor: 'black',
-    backgroundColor: 'white',
+    backgroundColor: '#007BFF',
   },
   addButtonText: {
-    color: 'black',
+    color: '#FFF',
+    fontWeight: 'bold',
   },
   centeredView: {
     flex: 1,

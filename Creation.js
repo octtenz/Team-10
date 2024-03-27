@@ -225,7 +225,7 @@ const CreationScreen = ({ navigation, route }) => {
         />
         <SetReminderScreen/>
       </View>
-      <Text style={styles.hintText}>Hint: Only title field is required</Text>
+      <Text style={styles.hintText}>Hint: Title field is required</Text>
       <TouchableOpacity style={styles.button} onPress={handleCancel}>
         <Text style={styles.buttonText}>Cancel</Text>
       </TouchableOpacity>
