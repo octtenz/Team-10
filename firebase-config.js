@@ -1,9 +1,10 @@
-import { initializeApp } from 'firebase/app';
-import { getDatabase } from 'firebase/database';
+import firebase from 'firebase/compat/app';
+import { initializeAuth, getReactNativePersistence, getAuth } from "firebase/compat/auth";
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
+import { getFirestore } from 'firebase/compat/firestore';
 
 const firebaseConfig = {
     apiKey: "AIzaSyDtPR5OAYDU5_4zDRbbIUAZYBYzrK5D4nE",
-
     authDomain: "team10-c90d8.firebaseapp.com",
     projectId: "team10-c90d8",
     storageBucket: "team10-c90d8.appspot.com",
@@ -13,7 +14,11 @@ const firebaseConfig = {
     // databaseURL: 'https://todoapp-XXXXXX.firebaseio.com',
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-export { db }
+if (!firebase.apps.length){
+  firebase.initializeApp(firebaseConfig);
+}
+export const FIREBASE_APP = firebase;
+// export const FIREBASE_APP = initializeApp(firebaseConfig);
+// export const FIREBASE_AUTH = getAuth(FIREBASE_APP);
+export const FIREBASE_AUTH = firebase.auth();
+export const FIREBASE_DB = firebase.firestore();
