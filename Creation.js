@@ -14,11 +14,17 @@ import { FIREBASE_DB } from './firebase-config.js';
 import { addDoc, collection } from 'firebase/firestore';
 import AddTagsModal from './addTagPopup.js';
 import SetReminderScreen from './setReminderPopup.js';
+import * as Notifications from 'expo-notifications';
 
 const CreationScreen = ({ navigation, route }) => {
   const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
   const [parentTask, setParentTask] = useState('');
+  const [existingTasks, setExistingTasks] = useState([
+    'Task A',
+    'Task B',
+    'Task C',
+  ]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [startDateDay, setStartDateDay] = useState('');
   const [startDateMonth, setStartDateMonth] = useState('');
@@ -27,14 +33,43 @@ const CreationScreen = ({ navigation, route }) => {
   const [dueDateMonth, setDueDateMonth] = useState('');
   const [dueDateYear, setDueDateYear] = useState('');
   const [expectedTime, setExpectedTime] = useState('');
-  const [existingTasks, setExistingTasks] = useState([
-    'Task A',
-    'Task B',
-    'Task C',
-  ]);
+  const [notificationScheduled, setNotificationScheduled] = useState(false);
 
   const handleParentTask = (index, value) => {
     setParentTask(value);
+  };
+
+  const removeTag = (index) => {
+    const updatedTags = [...selectedTags];
+    updatedTags.splice(index, 1);
+    setSelectedTags(updatedTags);
+  };
+
+  const handleTagSelect = (tag) => {
+    setSelectedTags([...selectedTags, { text: tag, selected: false }]);
+  };
+
+  const toggleTagSelection = (index) => {
+    const updatedTags = [...selectedTags];
+    updatedTags[index].selected = !updatedTags[index].selected;
+    setSelectedTags(updatedTags);
+  };
+
+  const cancelNotification = async () => {
+    try {
+      await Notifications.cancelAllScheduledNotificationsAsync();
+      setNotificationScheduled(false);
+      console.log('Notification cancelled');
+    } catch (error) {
+      console.error('Error cancelling notification:', error.message);
+      Alert.alert('Error', 'Failed to cancel notification. Please try again later.');
+    }
+  };
+
+  const handleCancel = () => {
+    console.log('Cancelled');
+    cancelNotification();
+    navigation.navigate('Home', route.params);
   };
 
   const handleSave = async () => {
@@ -83,29 +118,9 @@ const CreationScreen = ({ navigation, route }) => {
       TaskID: docRef.id
     });
 
-    navigation.navigate('Home', route.params);
-  };
-
-  const handleCancel = () => {
-    console.log('Cancelled');
+    setNotificationScheduled(true);
 
     navigation.navigate('Home', route.params);
-  };
-
-  const removeTag = (index) => {
-    const updatedTags = [...selectedTags];
-    updatedTags.splice(index, 1);
-    setSelectedTags(updatedTags);
-  };
-
-  const handleTagSelect = (tag) => {
-    setSelectedTags([...selectedTags, { text: tag, selected: false }]);
-  };
-
-  const toggleTagSelection = (index) => {
-    const updatedTags = [...selectedTags];
-    updatedTags[index].selected = !updatedTags[index].selected;
-    setSelectedTags(updatedTags);
   };
 
   return (
@@ -223,7 +238,9 @@ const CreationScreen = ({ navigation, route }) => {
           value={expectedTime}
           onChangeText={setExpectedTime}
         />
-        <SetReminderScreen/>
+        <SetReminderScreen
+          title={title}
+        />
       </View>
       <Text style={styles.hintText}>Hint: Title field is required</Text>
       <TouchableOpacity style={styles.button} onPress={handleCancel}>

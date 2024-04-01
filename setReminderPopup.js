@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, Alert } fro
 import { FontAwesome } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 
-const SetReminderScreen = () => {
+const SetReminderScreen = ({title}) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [day, setDay] = useState('');
   const [month, setMonth] = useState('');
@@ -29,6 +29,10 @@ const SetReminderScreen = () => {
 
   const addReminder = async () => {
     try {
+      if (!title) {
+        Alert.alert('Title field is required');
+        return;
+      }
       if (!notificationPermission) {
         await requestNotificationPermission();
         if (!notificationPermission) {
@@ -40,7 +44,7 @@ const SetReminderScreen = () => {
       if (day && month && year && hour && minute) {
         const notificationDate = new Date(year, month - 1, day, hour, minute);
         if (notificationDate > Date.now()) {
-          console.log('Adding Reminder:', day, month, year, hour, minute);
+          console.log('Notification added:', day, month, year, hour, minute);
           await scheduleNotification(notificationDate);
           setModalVisible(false);
         } else {
@@ -59,11 +63,12 @@ const SetReminderScreen = () => {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Notification',
-        body: 'Do not forget about your task!',
+        body: `Do not forget about your task: ${title}!`,
       },
       trigger: { date: notificationDate },
     });
   };
+  
 
   return (
     <View style={styles.container}>
