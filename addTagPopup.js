@@ -6,10 +6,9 @@ const AddTagsModal = ({ onTagSelect }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [newTag, setNewTag] = useState('');
   const [tagOptions, setTagOptions] = useState(['Work', 'School', 'High Priority', 'Low Priority ', 'Personal']);
-
   const handleTagSelect = (tag) => {
-    onTagSelect(tag); 
-    setModalVisible(false); 
+    onTagSelect(tag);
+    setModalVisible(false);
   };
 
   const saveTag = () => {
@@ -150,3 +149,5 @@ const styles = StyleSheet.create({
 });
 
 export default AddTagsModal;
+
+

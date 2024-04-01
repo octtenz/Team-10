@@ -10,8 +10,6 @@ import PasswordPopup from './passwordPopup.js';
 
 import { FIREBASE_DB } from './firebase-config';
 
-
-
 const LoginScreen = ({ navigation }) => {
     
     const todoRef = FIREBASE_DB.collection('Task (a@gmail.com)');
@@ -19,7 +17,7 @@ const LoginScreen = ({ navigation }) => {
         const tempDoc = querySnapshot.docs.map((doc) => {
             return { id: doc.id, ...doc.data() }
         })
-        console.log(tempDoc)
+        // console.log(tempDoc)
     })
 
     //output:
@@ -357,4 +355,5 @@ const styles = StyleSheet.create({
     },
 });
 
-export { LoginScreen, ResetPasswordScreen };
+export { LoginScreen, ResetPasswordScreen};
+
