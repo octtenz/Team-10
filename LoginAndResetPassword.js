@@ -6,33 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import EmailPopup from './emailPopup.js';
 import PasswordPopup from './passwordPopup.js';
 
-
-
-import { FIREBASE_DB } from './firebase-config';
-
 const LoginScreen = ({ navigation }) => {
-    
-    const todoRef = FIREBASE_DB.collection('Task (a@gmail.com)');
-    todoRef.get().then((querySnapshot) => {
-        const tempDoc = querySnapshot.docs.map((doc) => {
-            return { id: doc.id, ...doc.data() }
-        })
-        // console.log(tempDoc)
-    })
-
-    //output:
-    // [{"dueDate": null, "expectedTime": "", "id": "I6lFTd1bJJ2mJub4BYUE", "note": "", "parentTask": "", "selectedTags": [], "startDate": null, "title": "task1"}, {"dueDate": null, "expectedTime": "", "id": "TfFvBGVoWWm2N01c2T5B", "note": "", "parentTask": "", "selectedTags": [], "startDate": null, "title": "task2"}]
-    
-
-
-
-    
-    
-    
-    
-    
-    
-    
     const [invalidMessageVisible, setInvalidMessageVisible] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -355,4 +329,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export { LoginScreen, ResetPasswordScreen};
+export { LoginScreen, ResetPasswordScreen };
