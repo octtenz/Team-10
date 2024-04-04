@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import ModalDropdown from 'react-native-modal-dropdown';
 import { FontAwesome } from '@expo/vector-icons';
 
 import { FIREBASE_DB } from './firebase-config.js';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, updateDoc } from 'firebase/firestore';
 import AddTagsModal from './addTagPopup.js';
 import SetReminderScreen from './setReminderPopup.js';
 import * as Notifications from 'expo-notifications';
@@ -20,11 +20,6 @@ const CreationScreen = ({ navigation, route }) => {
   const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
   const [parentTask, setParentTask] = useState('');
-  const [existingTasks, setExistingTasks] = useState([
-    'Task A',
-    'Task B',
-    'Task C',
-  ]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [startDateDay, setStartDateDay] = useState('');
   const [startDateMonth, setStartDateMonth] = useState('');
@@ -34,6 +29,28 @@ const CreationScreen = ({ navigation, route }) => {
   const [dueDateYear, setDueDateYear] = useState('');
   const [expectedTime, setExpectedTime] = useState('');
   const [notificationScheduled, setNotificationScheduled] = useState(false);
+
+  const tasks = route.params.tasks;
+  const [existingTasks, setExistingTasks] = useState(tasks.map(
+    tasks => tasks.id
+  ));
+
+  useEffect(() => {
+    loadData();
+  }, []);
+  const loadData = () => {
+    if(route.params.currentTaskID != null){
+      const currentTask = tasks.find(obj => obj.id === route.params.currentTaskID);
+      setTitle(currentTask.title)
+      setNote(currentTask.note)
+      setParentTask(currentTask.parentTask)
+      setSelectedTags(currentTask.selectedTags)
+      setStartDateDay(currentTask.startDate)
+      setDueDateDay(currentTask.dueDate)
+      setExpectedTime(currentTask.expectedTime)
+      setExistingTasks(existingTasks.filter((item) => item !== "id(" + route.params.currentTaskID + "): " + currentTask.title))
+    }
+  }
 
   const handleParentTask = (index, value) => {
     setParentTask(value);
@@ -103,20 +120,33 @@ const CreationScreen = ({ navigation, route }) => {
       setExistingTasks((prevTasks) => [...prevTasks, title]);
     }
 
-    const docRef = await addDoc(collection(FIREBASE_DB, "Task (" + route.params.email + ")"), {
-      title,
-      note,
-      parentTask,
-      selectedTags,
-      startDate,
-      dueDate,
-      expectedTime,
-    });
-
-    const docRef2 = await addDoc(collection(FIREBASE_DB, "Activity (" + route.params.email + ")"), {
-      Action: "ADD",
-      TaskID: docRef.id
-    });
+    if (route.params.currentTaskID == null){
+      const docRef = await addDoc(collection(FIREBASE_DB, "Task (" + route.params.email + ")"), {
+        title,
+        note,
+        parentTask,
+        selectedTags,
+        startDate,
+        dueDate,
+        expectedTime,  
+      })
+      route.params.currentTaskID = docRef.id;
+      
+      const docRef2 = await addDoc(collection(FIREBASE_DB, "Activity (" + route.params.email + ")"), {
+        Action: "ADD",
+        TaskID: docRef.id
+      });  
+    }else{
+      const docRef = await updateDoc(doc(FIREBASE_DB, "Task (" + route.params.email + ")", route.params.currentTaskID), {
+        title,
+        note,
+        parentTask,
+        selectedTags,
+        startDate,
+        dueDate,
+        expectedTime,  
+      })
+    }
 
     setNotificationScheduled(true);
 
@@ -125,7 +155,7 @@ const CreationScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Create New Task</Text>
+      <Text style={styles.title}>{route.params.currentTaskID == null ? "Create New Task" : "Edit Existing Task"}</Text>
       <TextInput
         style={styles.input}
         placeholder="Title"
@@ -141,7 +171,7 @@ const CreationScreen = ({ navigation, route }) => {
       />
       <View style={styles.parentTaskContainer}>
         <ModalDropdown
-          options={existingTasks}
+          options={existingTasks.map(existingTasks => "id(" + existingTasks + "): " + tasks.find(obj => obj.id === existingTasks).title)}
           onSelect={handleParentTask}
           textStyle={styles.dropdownText}
           dropdownTextStyle={styles.dropdownItemText}
