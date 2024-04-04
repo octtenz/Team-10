@@ -107,7 +107,7 @@ const LoginScreen = ({ navigation }) => {
                         placeholder='Email'
                         autoCorrect={false}
                         spellCheck={false}
-                        onChangeText={(text) => setEmail(text.replace(' ', ''))}
+                        onChangeText={(text) => setEmail(text.replace(' ', '').toLowerCase())}
                     />
 
                     <Image style={styles.showPasswordButton} />
