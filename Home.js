@@ -8,6 +8,8 @@ import SortField from "./dropDownSort";
 //TODO add checkbox, add edit task, add delete button
 const HomeScreen = ({ navigation, route }) => {
   const goToCreation = () => {
+    route.params.tasks = tasks;
+    route.params.currentTaskID = null;
     navigation.navigate('Creation', route.params);
   };
 
