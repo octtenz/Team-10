@@ -45,10 +45,14 @@ const CreationScreen = ({ navigation, route }) => {
       setNote(currentTask.note)
       setParentTask(currentTask.parentTask)
       setSelectedTags(currentTask.selectedTags)
-      setStartDateDay(currentTask.startDate)
-      setDueDateDay(currentTask.dueDate)
+      setStartDateDay(currentTask.startDateDay)
+      setStartDateMonth(currentTask.startDateMonth)
+      setStartDateYear(currentTask.startDateYear)
+      setDueDateDay(currentTask.dueDateDay)
+      setDueDateMonth(currentTask.dueDateMonth)
+      setDueDateYear(currentTask.dueDateYear)
       setExpectedTime(currentTask.expectedTime)
-      setExistingTasks(existingTasks.filter((item) => item !== "id(" + route.params.currentTaskID + "): " + currentTask.title))
+      setExistingTasks(existingTasks.filter((item) => item !== route.params.currentTaskID))
     }
   }
 
@@ -111,14 +115,14 @@ const CreationScreen = ({ navigation, route }) => {
       note,
       parentTask,
       selectedTags,
-      startDate,
-      dueDate,
+      startDateDay,
+      startDateMonth,
+      startDateYear,
+      dueDateDay,
+      dueDateMonth,
+      dueDateYear,
       expectedTime,
     });
-
-    if (!existingTasks.includes(title)) {
-      setExistingTasks((prevTasks) => [...prevTasks, title]);
-    }
 
     if (route.params.currentTaskID == null){
       const docRef = await addDoc(collection(FIREBASE_DB, "Task (" + route.params.email + ")"), {
@@ -126,7 +130,12 @@ const CreationScreen = ({ navigation, route }) => {
         note,
         parentTask,
         selectedTags,
-        startDate,
+        startDateDay,
+        startDateMonth,
+        startDateYear,
+        dueDateDay,
+        dueDateMonth,
+        dueDateYear,
         dueDate,
         expectedTime,  
       })
@@ -142,8 +151,12 @@ const CreationScreen = ({ navigation, route }) => {
         note,
         parentTask,
         selectedTags,
-        startDate,
-        dueDate,
+        startDateDay,
+        startDateMonth,
+        startDateYear,
+        dueDateDay,
+        dueDateMonth,
+        dueDateYear,
         expectedTime,  
       })
     }
