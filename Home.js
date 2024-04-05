@@ -10,6 +10,11 @@ const HomeScreen = ({ navigation, route }) => {
   const goToCreation = () => {
     route.params.tasks = tasks;
     route.params.currentTaskID = null;
+    tags = [];
+    tasks.map(tasks => tasks.selectedTags).forEach(item => item.forEach(item => 
+      tags.includes(item.text) ? {} : tags.push(item.text)
+    ));
+    route.params.tags = tags;
     navigation.navigate('Creation', route.params);
   };
 
