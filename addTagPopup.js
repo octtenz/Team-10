@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, Modal, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import ModalDropdown from 'react-native-modal-dropdown';
 
-const AddTagsModal = ({ onTagSelect }) => {
+const AddTagsModal = ({ onTagSelect, tags }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [newTag, setNewTag] = useState('');
-  const [tagOptions, setTagOptions] = useState(['Work', 'School', 'High Priority', 'Low Priority ', 'Personal']);
+  const [tagOptions, setTagOptions] = useState(['Work', 'School', 'High Priority', 'Low Priority ', 'Personal', ...tags]);
 
   const handleTagSelect = (tag) => {
     onTagSelect(tag); 
