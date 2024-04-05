@@ -214,7 +214,7 @@ const CreationScreen = ({ navigation, route }) => {
             </TouchableOpacity>
           ))}
         </View>
-        <AddTagsModal onTagSelect={handleTagSelect} />
+        <AddTagsModal onTagSelect={handleTagSelect} tags = {route.params.tags} />
       </View>
       <View style={styles.dateInputContainer}>
         <Text style={styles.label}>Start Date:</Text>
