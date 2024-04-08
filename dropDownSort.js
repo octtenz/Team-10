@@ -1,17 +1,18 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Dropdown } from 'react-native-element-dropdown';
+import React, {useState} from 'react';
+import {SafeAreaView, StyleSheet, Text, View} from 'react-native';
+import {Dropdown} from 'react-native-element-dropdown';
 import AntDesign from '@expo/vector-icons/AntDesign';
 
 // TODO connect tags with creation screen.
 // TODO have sort functionality with the tags.
 const tags = [
-    { label: 'Work', value: '1' },
-    { label: 'School', value: '2' },
-    { label: 'High Priority', value: '3' },
-    { label: 'Low Priority', value: '4' },
-    { label: 'Personal', value: '5' },
+    {label: 'Work', value: '1'},
+    {label: 'School', value: '2'},
+    {label: 'High Priority', value: '3'},
+    {label: 'Low Priority', value: '4'},
+    {label: 'Personal', value: '5'},
 ];
+
 const SortField = () => {
     const [value, setValue] = useState(null);
     const [isFocus, setIsFocus] = useState(false);
@@ -19,7 +20,7 @@ const SortField = () => {
     const renderLabel = () => {
         if (value || isFocus) {
             return (
-                <Text style={[styles.label, isFocus && { color: 'blue' }]}>
+                <Text style={[styles.label, isFocus && {color: 'blue'}]}>
                     Sort by...
                 </Text>
             );
@@ -29,37 +30,40 @@ const SortField = () => {
 
     return (
         <View style={styles.container}>
-            {renderLabel()}
-            <Dropdown
-                style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
-                placeholderStyle={styles.placeholderStyle}
-                selectedTextStyle={styles.selectedTextStyle}
-                inputSearchStyle={styles.inputSearchStyle}
-                iconStyle={styles.iconStyle}
-                data={tags}
-                search
-                maxHeight={300}
-                labelField="label"
-                valueField="value"
-                placeholder={!isFocus ? 'Sort by...' : '...'}
-                searchPlaceholder="Search..."
-                value={value}
-                onFocus={() => setIsFocus(true)}
-                onBlur={() => setIsFocus(false)}
-                onChange={item => {
-                    setValue(item.value);
-                    setIsFocus(false);
-                }}
-                renderLeftIcon={() => (
-                    <AntDesign
-                        style={styles.icon}
-                        color={isFocus ? 'blue' : 'black'}
-                        name="Safety"
-                        size={20}
-                    />
-                )}
-            />
+            <SafeAreaView>
+                {renderLabel()}
+                <Dropdown
+                    style={[styles.dropdown, isFocus && {borderColor: 'blue'}]}
+                    placeholderStyle={styles.placeholderStyle}
+                    selectedTextStyle={styles.selectedTextStyle}
+                    inputSearchStyle={styles.inputSearchStyle}
+                    iconStyle={styles.iconStyle}
+                    data={tags}
+                    search
+                    maxHeight={300}
+                    labelField="label"
+                    valueField="value"
+                    placeholder={!isFocus ? 'Sort by...' : '...'}
+                    searchPlaceholder="Search..."
+                    value={value}
+                    onFocus={() => setIsFocus(true)}
+                    onBlur={() => setIsFocus(false)}
+                    onChange={item => {
+                        setValue(item.value);
+                        setIsFocus(false);
+                    }}
+                    renderLeftIcon={() => (
+                        <AntDesign
+                            style={styles.icon}
+                            color={isFocus ? 'blue' : 'black'}
+                            name="Safety"
+                            size={20}
+                        />
+                    )}
+                />
+            </SafeAreaView>
         </View>
+
     );
 };
 

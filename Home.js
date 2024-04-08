@@ -1,155 +1,208 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, RefreshControl} from 'react-native';
 import {FontAwesome} from '@expo/vector-icons';
 import {FIREBASE_DB as db} from "./firebase-config";
 import Checkbox from 'expo-checkbox';
 import SortField from "./dropDownSort";
+import AntDesign from '@expo/vector-icons/AntDesign';
+import {addDoc, collection} from "firebase/firestore";
 
-//TODO add checkbox, add edit task, add delete button
-const HomeScreen = ({ navigation, route }) => {
-  const goToCreation = () => {
-    route.params.tasks = tasks;
-    route.params.currentTaskID = null;
-    tags = [];
-    tasks.map(tasks => tasks.selectedTags).forEach(item => item.forEach(item => 
-      tags.includes(item.text) ? {} : tags.push(item.text)
-    ));
-    route.params.tags = tags;
-    navigation.navigate('Creation', route.params);
-  };
+//TODO add checkbox
+const HomeScreen = ({navigation, route}) => {
+
+    const goToCreation = () => {
+        route.params.tasks = tasks;
+        route.params.currentTaskID = null;
+        let tags = [];
+
+        tasks.map(tasks => tasks.selectedTags).forEach(item => item.forEach(item =>
+            tags.includes(item.text) ? {} : tags.push(item.text)
+        ));
+        route.params.tags = tags;
+        navigation.navigate('Creation', route.params);
+        console.log(tags);
+
+    };
 
     const goToSettings = () => {
-    navigation.navigate('Settings', route.params);
-  };
+        navigation.navigate('Settings', route.params);
+    };
 
     const goToActivity = () => {
-      navigation.navigate('Activity History', route.params);
+        navigation.navigate('Activity History', route.params);
     }
 
-  const [refreshing, setRefreshing] = React.useState(false);
+    const [refreshing, setRefreshing] = React.useState(false);
 
-  const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    fetchTasks();
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 2000);
-  }, []);
+    const [firstRefresh, setFirstRefresh] = React.useState(false);
 
-  let [tasks,setTasks] = useState([]);
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        fetchTasks();
+        setTimeout(() => {
+            setRefreshing(false);
+        }, 2000);
+    }, []);
 
-  const DropdownComponent = () => {
-    const [value, setValue] = useState(null);
-    const [isFocus, setIsFocus] = useState(false);
+    let [complete, setComplete] = React.useState([]);
 
-    const renderLabel = () => {
-      if (value || isFocus) {
-        return (
-            <Text style={[styles.label, isFocus && {color: 'blue'}]}>
-              Sort tasks
-            </Text>
-        );
-      }
-      return null;
-    };
-  }
+    let [tasks, setTasks] = useState([]);
 
-  useEffect(() => {
-    fetchTasks();
-  }, []);
+    let [deleteList, setDeleteList] = useState([]);
 
-      const fetchTasks = async () => {
+    useEffect(() => {
+        fetchTasks();
+    }, [tasks]);
+
+    const fetchTasks = useCallback(async () => {
+
         const retrieveData = db.collection("Task (" + route.params.email + ")");
         retrieveData.get().then((querySnapshot) => {
-          tasks = querySnapshot.docs.map((doc) => {
-          return {id: doc.id,...doc.data()}
+            tasks = querySnapshot.docs.map((doc) => {
+                return {id: doc.id, ...doc.data()}
+            });
+
+            const checkDelete = db.collection("Activity (" + route.params.email + ")").where("Action", "==", "DELETE");
+            checkDelete.get().then((querySnapshot) => {
+                deleteList = querySnapshot.docs.map((doc) => {
+                    return doc.data().TaskID;
+                });
+            });
+            tasks = tasks.filter(tasks => !deleteList.includes(tasks.id));
+            setTasks(tasks);
+            setRefreshing(false);
         });
-        setTasks(tasks);
-        setRefreshing(false);
-      })
-      }
-      const renderItem = ({item}) => (
-          <Text style={styles.item}>{item.title}</Text>
-      );
+    }, []);
 
-  return (
+    const renderItem = ({item}) => (
+        <View>
+            <Text style={styles.item}>{item.title}</Text>
+            <TouchableOpacity onPress={() => deleteTask(item.id)} style={styles.deleteButton}>
+                <AntDesign
+                    name="delete"
+                    size={20}
+                />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={editTask} style={styles.editButton}>
+                <AntDesign
+                    name="edit"
+                    size={20}
+                />
+            </TouchableOpacity>
+        </View>
+    );
 
-    <View style={styles.container}>
-      <Text style={styles.title}>Home Screen</Text>
-      <TouchableOpacity onPress={goToSettings} style={[styles.settingButton, styles.button]}>
-        <FontAwesome name="cog" size={24} color="black" />
-      </TouchableOpacity>
-      <TouchableOpacity onPress={goToCreation} style={[styles.creationButton, styles.button]}>
-        <Text style={styles.buttonText}>Create Task</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={goToActivity} style={[styles.ActivityButton, styles.button]}>
-        <Text style={styles.buttonText}>Activity History</Text>
-      </TouchableOpacity>
-      <SafeAreaView>
-        <SortField/>
-        <FlatList
-            data={tasks}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        />
-      </SafeAreaView>
-    </View>
+    const deleteTask = async (id) => {
+        const deleteActivity = await addDoc(collection(db, "Activity (" + route.params.email + ")"), {
+            Action: "DELETE",
+            TaskID: id,
+        });
+        onRefresh();
+    }
 
-  );
+    const editTask = () => {
+        navigation.navigate('Activity History', route.params);
+        //TODO implement edit screen
+    }
+
+    return (
+
+        <View style={styles.container}>
+            <SafeAreaView>
+                <Text style={styles.title}>Home Screen</Text>
+                <TouchableOpacity onPress={goToSettings} style={[styles.settingButton, styles.button]}>
+                    <FontAwesome name="cog" size={24} color="black"/>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={goToCreation} style={[styles.creationButton, styles.button]}>
+                    <Text style={styles.buttonText}>Create Task</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={goToActivity} style={[styles.ActivityButton, styles.button]}>
+                    <Text style={styles.buttonText}>Activity History</Text>
+                </TouchableOpacity>
+                <SortField/>
+                <FlatList style={styles.listContainer}
+                          data={tasks}
+                          renderItem={renderItem}
+                          keyExtractor={(item) => item.id}
+                          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh}/>}
+                />
+            </SafeAreaView>
+        </View>
+
+    );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 30,
-    color: '#379EE8',
-  },
-  button: {
-    position: 'absolute',
-    borderRadius: 5,
-    padding: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  settingButton: {
-    top: 20,
-    right: 20,
-    backgroundColor: '#ddd',
-  },
-  creationButton: {
-    bottom: 30,
-    right: 20,
-    backgroundColor: '#007BFF',
-  },
-  ActivityButton: {
-    bottom: 30,
-    left: 20,
-    backgroundColor: '#009BFF',
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  item: {
-    padding: 15,
-    fontSize: 20,
-    marginTop: 5,
-    fontWeight: 'bold',
-    backgroundColor: '#BDDBF1',
-    width: 300,
-    borderColor: '#000',
-    borderWidth: 2,
-
-  }
+    container: {
+        flex: 1,
+        paddingHorizontal: 20,
+        paddingTop: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 30,
+        color: '#379EE8',
+        left: 90,
+    },
+    button: {
+        position: 'absolute',
+        borderRadius: 5,
+        padding: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    settingButton: {
+        right: 1,
+        backgroundColor: '#ddd',
+    },
+    creationButton: {
+        bottom: 30,
+        right: 20,
+        backgroundColor: '#007BFF',
+    },
+    ActivityButton: {
+        bottom: 30,
+        left: 20,
+        backgroundColor: '#009BFF',
+    },
+    buttonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+    },
+    item: {
+        padding: 12,
+        fontSize: 20,
+        marginTop: 5,
+        fontWeight: 'bold',
+        backgroundColor: '#BDDBF1',
+        width: 350,
+        borderColor: '#000',
+        borderWidth: 2,
+        paddingRight: 80,
+    },
+    deleteButton: {
+        backgroundColor: '#DF0000',
+        borderRadius: 10,
+        padding: 6,
+        position: 'absolute',
+        top: 15,
+        right: 15,
+    },
+    editButton: {
+        backgroundColor: '#007BFF',
+        borderRadius: 10,
+        padding: 6,
+        position: 'absolute',
+        top: 15,
+        right: 50,
+    },
+    listContainer: {
+        marginBottom: 45,
+        marginTop: 5,
+    }
 });
 
 export default HomeScreen;

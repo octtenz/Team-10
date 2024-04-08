@@ -1,12 +1,19 @@
 import React, {useEffect, useState} from "react";
-import {View, StyleSheet, Text, SafeAreaView, FlatList, RefreshControl} from "react-native";
+import {View, StyleSheet, Text, SafeAreaView, FlatList, RefreshControl, TouchableOpacity} from "react-native";
 import {FIREBASE_DB as db} from "./firebase-config";
+import AntDesign from '@expo/vector-icons/AntDesign';
 
-const ActivityHistoryScreen = ({navigation,route}) => {
-    // TODO Match activity history to actual task, and not just task ID.
+const ActivityHistoryScreen = ({navigation, route}) => {
+    // TODO Match activity history to actual task, and not just task ID. (?)
     // TODO add delete button to history.
 
     let [activities, setActivities] = useState([]);
+
+    let [taskNames, setTaskNames] = useState([]);
+
+    const deleteActivity = ({id}) => {
+        navigation.navigate('Home', route.params);
+    }
 
     const [refreshing, setRefreshing] = React.useState(false);
 
@@ -26,26 +33,46 @@ const ActivityHistoryScreen = ({navigation,route}) => {
         const retrieveData = db.collection("Activity (" + route.params.email + ")");
         retrieveData.get().then((querySnapshot) => {
             activities = querySnapshot.docs.map((doc) => {
-                return {id: doc.id,...doc.data()}
+                return {id: doc.id, ...doc.data()}
+            });
+
+            const taskTitleQuery = db.collection("Task (" + route.params.email + ")");
+            taskTitleQuery.get().then((querySnapshot) => {
+                taskNames = querySnapshot.docs.map((doc) => {
+                    return {id: doc.id, title: doc.data().title}
+                });
             });
             setActivities(activities);
             setRefreshing(false);
-        })
+        });
     }
 
+    const taskTitleMap = {};
+    taskNames.forEach(task => {
+        taskTitleMap[task.id] = task.title;
+    });
+// TODO after DB shortage, check if this works.
     const renderItem = ({item}) => (
-        <Text style={styles.item}>{item.Action + " " + item.TaskID}</Text>
+        <View>
+            <Text style={styles.item}>{item.Action + " " + taskTitleMap[item.TaskID]}</Text>
+            <TouchableOpacity onPress={deleteActivity} style={styles.deleteButton}>
+                <AntDesign
+                    name="delete"
+                    size={20}
+                />
+            </TouchableOpacity>
+        </View>
     );
 
-    return(
+    return (
         <View style={styles.container}>
             <SafeAreaView>
-                <Text style={styles.title}> Activity History</Text>
+                <Text style={styles.title}>Activity History</Text>
                 <FlatList
                     data={activities}
                     renderItem={renderItem}
                     keyExtractor={(item) => item.id}
-                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh}/>}
                 />
             </SafeAreaView>
 
@@ -53,7 +80,7 @@ const ActivityHistoryScreen = ({navigation,route}) => {
     )
 }
 
-const styles= StyleSheet.create({
+const styles = StyleSheet.create({
     container: {
         flex: 1,
         paddingHorizontal: 20,
@@ -68,19 +95,28 @@ const styles= StyleSheet.create({
         color: '#379EE8',
         alignItems: 'center',
         justifyContent: 'center',
+        left: 80,
     },
     item: {
-        padding: 15,
+        padding: 12,
         fontSize: 20,
         marginTop: 5,
         fontWeight: 'bold',
         backgroundColor: '#BDDBF1',
-        width: 300,
+        width: 350,
         borderColor: '#000',
         borderWidth: 2,
         alignItems: 'center',
         justifyContent: 'center',
-
+        paddingRight: 40,
+    },
+    deleteButton: {
+        backgroundColor: '#DF0000',
+        borderRadius: 10,
+        padding: 6,
+        position: 'absolute',
+        top: 15,
+        right: 15,
     },
 });
 
