@@ -194,7 +194,15 @@ const AnalysisScreen = () => {
           {Object.keys(data.categories.remainingTasks).map((key) => (
             <View style={styles.tableRow} key={key}>
               <Text style={[styles.tableCell, styles.left]}>Remaining Tasks</Text>
-              <Text style={[styles.tableCell, styles.left]}>{key}</Text>
+              <View style={[styles.tableCell, styles.left]}>
+                {key === 'Math' || key === 'Science' ? (
+                  <View style={styles.circle}>
+                    <Text style={[styles.center, { color: 'white' }]}>{key}</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.center}>{key}</Text>
+                )}
+              </View>
               <Text style={[styles.tableCell, styles.left]}>{data.categories.remainingTasks[key]}</Text>
             </View>
           ))}
@@ -205,7 +213,15 @@ const AnalysisScreen = () => {
           {Object.keys(data.categories.completedTasks).map((key) => (
             <View style={styles.tableRow} key={key}>
               <Text style={[styles.tableCell, styles.left]}>Completed Tasks</Text>
-              <Text style={[styles.tableCell, styles.left]}>{key}</Text>
+              <View style={[styles.tableCell, styles.left]}>
+                {key === 'Math' || key === 'Science' ? (
+                  <View style={styles.circle}>
+                    <Text style={[styles.center, { color: 'white' }]}>{key}</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.center}>{key}</Text>
+                )}
+              </View>
               <Text style={[styles.tableCell, styles.left]}>{data.categories.completedTasks[key]}</Text>
             </View>
           ))}
@@ -274,6 +290,13 @@ const styles = StyleSheet.create({
   left: {
     justifyContent: 'flex-start',
     alignItems: 'flex-start'
+  },
+  circle: {
+    width: 'auto',
+    backgroundColor: '#66ccff',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 100
   }
 });
 
