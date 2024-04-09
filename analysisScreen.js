@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
-import { FIREBASE_DB } from './App';
+import {FIREBASE_DB as db} from "./firebase-config";
 
 const AnalysisScreen = () => {
   const [data, setData] = useState({
