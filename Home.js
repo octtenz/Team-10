@@ -11,6 +11,7 @@ import {addDoc, collection} from "firebase/firestore";
 const HomeScreen = ({navigation, route}) => {
 
     const goToCreation = () => {
+        route.params.currentTaskID = null ;
         navigation.navigate('Creation', route.params);
     };
 
