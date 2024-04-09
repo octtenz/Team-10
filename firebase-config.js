@@ -4,13 +4,13 @@ import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 import { getFirestore } from 'firebase/compat/firestore';
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDtPR5OAYDU5_4zDRbbIUAZYBYzrK5D4nE",
-    authDomain: "team10-c90d8.firebaseapp.com",
-    projectId: "team10-c90d8",
-    storageBucket: "team10-c90d8.appspot.com",
-    messagingSenderId: "48096993648",
-    appId: "1:48096993648:web:6894706c4677ac302a2fb5",
-    measurementId: "G-9QYS5XVZ2K"
+    apiKey: "AIzaSyAPJbr9fq7RQRVxi9l52Eb_0OE07ILfThU",
+    authDomain: "team-10-f81c2.firebaseapp.com",
+    projectId: "team-10-f81c2",
+    storageBucket: "team-10-f81c2.appspot.com",
+    messagingSenderId: "168094770908",
+    appId: "1:168094770908:web:8e43509c7560e500bc7619"
+    // measurementId: "G-9QYS5XVZ2K"
     // databaseURL: 'https://todoapp-XXXXXX.firebaseio.com',
 };
 
