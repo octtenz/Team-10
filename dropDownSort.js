@@ -13,7 +13,7 @@ const tags = [
     {label: 'Personal', value: '5'},
 ];
 
-const SortField = () => {
+const SortField = ({additionalTags}) => {
     const [value, setValue] = useState(null);
     const [isFocus, setIsFocus] = useState(false);
 

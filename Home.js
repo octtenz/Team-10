@@ -11,17 +11,7 @@ import {addDoc, collection} from "firebase/firestore";
 const HomeScreen = ({navigation, route}) => {
 
     const goToCreation = () => {
-        route.params.tasks = tasks;
-        route.params.currentTaskID = null;
-        let tags = [];
-
-        tasks.map(tasks => tasks.selectedTags).forEach(item => item.forEach(item =>
-            tags.includes(item.text) ? {} : tags.push(item.text)
-        ));
-        route.params.tags = tags;
         navigation.navigate('Creation', route.params);
-        console.log(tags);
-
     };
 
     const goToSettings = () => {
@@ -33,8 +23,6 @@ const HomeScreen = ({navigation, route}) => {
     }
 
     const [refreshing, setRefreshing] = React.useState(false);
-
-    const [firstRefresh, setFirstRefresh] = React.useState(false);
 
     const onRefresh = React.useCallback(() => {
         setRefreshing(true);
@@ -83,7 +71,7 @@ const HomeScreen = ({navigation, route}) => {
                     size={20}
                 />
             </TouchableOpacity>
-            <TouchableOpacity onPress={editTask} style={styles.editButton}>
+            <TouchableOpacity onPress={() => editTask(item.id)} style={styles.editButton}>
                 <AntDesign
                     name="edit"
                     size={20}
@@ -100,9 +88,16 @@ const HomeScreen = ({navigation, route}) => {
         onRefresh();
     }
 
-    const editTask = () => {
-        navigation.navigate('Activity History', route.params);
-        //TODO implement edit screen
+    const editTask = (id) => {
+        route.params.tasks = tasks ;
+        route.params.currentTaskID = id ;
+        let tags = [];
+        tasks.map(tasks => tasks.selectedTags).forEach(item => item.forEach(item =>
+            tags.includes(item.text) ? {} : tags.push(item.text)
+        ));
+        route.params.tags = tags;
+        console.log("Tags? " + tags);
+        navigation.navigate('Creation', route.params);
     }
 
     return (

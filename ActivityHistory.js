@@ -1,15 +1,16 @@
-import React, {useEffect, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import {View, StyleSheet, Text, SafeAreaView, FlatList, RefreshControl, TouchableOpacity} from "react-native";
 import {FIREBASE_DB as db} from "./firebase-config";
 import AntDesign from '@expo/vector-icons/AntDesign';
 
 const ActivityHistoryScreen = ({navigation, route}) => {
-    // TODO Match activity history to actual task, and not just task ID. (?)
     // TODO add delete button to history.
 
     let [activities, setActivities] = useState([]);
 
     let [taskNames, setTaskNames] = useState([]);
+
+    let [taskTitleMap, setTaskTitleMap] = useState({});
 
     const deleteActivity = ({id}) => {
         navigation.navigate('Home', route.params);
@@ -27,14 +28,16 @@ const ActivityHistoryScreen = ({navigation, route}) => {
 
     useEffect(() => {
         fetchActivity();
-    }, []);
+    }, [taskTitleMap,taskNames]);
 
-    const fetchActivity = async () => {
+    const fetchActivity = useCallback( async () => {
         const retrieveData = db.collection("Activity (" + route.params.email + ")");
         retrieveData.get().then((querySnapshot) => {
             activities = querySnapshot.docs.map((doc) => {
                 return {id: doc.id, ...doc.data()}
             });
+
+            setActivities(activities);
 
             const taskTitleQuery = db.collection("Task (" + route.params.email + ")");
             taskTitleQuery.get().then((querySnapshot) => {
@@ -42,16 +45,19 @@ const ActivityHistoryScreen = ({navigation, route}) => {
                     return {id: doc.id, title: doc.data().title}
                 });
             });
-            setActivities(activities);
+
+            setTaskNames(taskNames);
+
+            taskNames.forEach(doc => {
+                taskTitleMap[doc.id] = doc.title;
+            });
+
+            setTaskTitleMap(taskTitleMap);
+
             setRefreshing(false);
         });
-    }
+    }, []);
 
-    const taskTitleMap = {};
-    taskNames.forEach(task => {
-        taskTitleMap[task.id] = task.title;
-    });
-// TODO after DB shortage, check if this works.
     const renderItem = ({item}) => (
         <View>
             <Text style={styles.item}>{item.Action + " " + taskTitleMap[item.TaskID]}</Text>
@@ -108,7 +114,7 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingRight: 40,
+        paddingRight: 50,
     },
     deleteButton: {
         backgroundColor: '#DF0000',
