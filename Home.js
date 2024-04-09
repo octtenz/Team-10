@@ -41,9 +41,11 @@ const HomeScreen = ({navigation, route}) => {
 
     useEffect(() => {
         fetchTasks();
-    }, [tasks]);
+    }, [fetchTasks]);
 
     const fetchTasks = useCallback(async () => {
+
+        console.log("Fetching... (using a read)");
 
         const retrieveData = db.collection("Task (" + route.params.email + ")");
         retrieveData.get().then((querySnapshot) => {
