@@ -7,7 +7,7 @@ const SettingScreen = ({ navigation, route}) => {
   };
 
   const handleReviewAnalysisReport = () => {
-    console.log('Navigating to review analysis report screen');
+    navigation.navigate('Analysis', route.params);
   };
 
   const email = route.params.email;
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 18,
     marginBottom: 20,
-    alignItems: 'left',
+    alignItems: 'flex-start',
   },
   settingOption: {
     backgroundColor: '#e6e6e6',

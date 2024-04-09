@@ -6,6 +6,7 @@ import HomeScreen from './Home';
 import CreationScreen from './Creation';
 import SettingScreen from './Setting';
 import ActivityHistoryScreen from './ActivityHistory';
+import AnalysisScreen from './Analysis';
 
 const Stack = createStackNavigator();
 
@@ -18,7 +19,8 @@ export default function App() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Creation" component={CreationScreen} />
         <Stack.Screen name="Settings" component={SettingScreen} />
-          <Stack.Screen name="Activity History" component={ActivityHistoryScreen} />
+        <Stack.Screen name="Activity History" component={ActivityHistoryScreen} />
+        <Stack.Screen name="Analysis" component={AnalysisScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
