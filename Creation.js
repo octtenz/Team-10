@@ -127,7 +127,8 @@ const CreationScreen = ({ navigation, route }) => {
       dueDateDay,
       dueDateMonth,
       dueDateYear,
-      expectedTimeString,
+      expectedTime,
+      unit,
     });
 
     if (route.params.currentTaskID == null){
@@ -143,7 +144,8 @@ const CreationScreen = ({ navigation, route }) => {
         dueDateMonth,
         dueDateYear,
         dueDate,
-        expectedTimeString,  
+        expectedTime,
+        unit,
       })
       route.params.currentTaskID = docRef.id;
       
@@ -163,7 +165,8 @@ const CreationScreen = ({ navigation, route }) => {
         dueDateDay,
         dueDateMonth,
         dueDateYear,
-        expectedTimeString,  
+        expectedTime,
+        unit, 
       })
     }
 
@@ -220,8 +223,11 @@ const CreationScreen = ({ navigation, route }) => {
             </TouchableOpacity>
           ))}
         </View>
-        <AddTagsModal onTagSelect={handleTagSelect} tags = {route.params.tags} />
-      </View>
+        <AddTagsModal 
+          onTagSelect={handleTagSelect} 
+          tags={route.params && route.params.tags ? route.params.tags : []} 
+        />
+        </View>
       <View style={styles.dateInputContainer}>
         <Text style={styles.label}>Start Date:</Text>
         <View style={styles.dateInputs}>

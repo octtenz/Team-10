@@ -90,7 +90,6 @@ const HomeScreen = ({navigation, route}) => {
         });
         onRefresh();
     }
-
     const editTask = (id) => {
         route.params.tasks = tasks ;
         route.params.currentTaskID = id ;
@@ -102,7 +101,7 @@ const HomeScreen = ({navigation, route}) => {
         console.log("Tags? " + tags);
         navigation.navigate('Creation', route.params);
     }
-
+    
     return (
 
         <View style={styles.container}>
