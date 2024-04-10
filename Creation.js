@@ -57,6 +57,7 @@ const CreationScreen = ({ navigation, route }) => {
       setDueDateMonth(currentTask.dueDateMonth)
       setDueDateYear(currentTask.dueDateYear)
       setExpectedTime(currentTask.expectedTime)
+      setUnit(currentTask.unit)
       setExistingTasks(existingTasks.filter((item) => item !== route.params.currentTaskID))
     }
   }
@@ -166,8 +167,13 @@ const CreationScreen = ({ navigation, route }) => {
         dueDateMonth,
         dueDateYear,
         expectedTime,
-        unit, 
+        unit,
       })
+
+      const docRef2 = await addDoc(collection(FIREBASE_DB, "Activity (" + route.params.email + ")"), {
+        Action: "EDIT",
+        TaskID: route.params.currentTaskID
+      });  
     }
 
     setNotificationScheduled(true);
@@ -198,7 +204,7 @@ const CreationScreen = ({ navigation, route }) => {
           textStyle={styles.dropdownText}
           dropdownTextStyle={styles.dropdownItemText}
           dropdownStyle={styles.dropdown}
-          defaultIndex={-1}
+          defaultIndex={0}
           defaultValue="Select Parent Task"
         />
       </View>
@@ -298,7 +304,7 @@ const CreationScreen = ({ navigation, route }) => {
           style={styles.units}
           options={['seconds', 'minutes', 'hours', 'days', 'months', 'years']}
           onSelect={(index, value) => setUnit(value)}
-          defaultIndex={-1}
+          defaultIndex={0}
           defaultValue="Units"
         />
         <SetReminderScreen
