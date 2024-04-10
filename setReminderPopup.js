@@ -73,7 +73,7 @@ const SetReminderScreen = ({title}) => {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.button} onPress={() => setModalVisible(true)}>
-        <Text style={styles.buttonText}>Set Reminder</Text>
+        <FontAwesome name="bell" size={24} color="white" />
       </TouchableOpacity>
       <Modal
         animationType="slide"
@@ -198,10 +198,10 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#007BFF',
-    padding: 15,
+    padding: 10,
     borderRadius: 5,
     alignItems: 'center',
-    width: '100%',
+    width: 50,
   },
   buttonText: {
     color: '#FFF',

@@ -28,12 +28,17 @@ const CreationScreen = ({ navigation, route }) => {
   const [dueDateMonth, setDueDateMonth] = useState('');
   const [dueDateYear, setDueDateYear] = useState('');
   const [expectedTime, setExpectedTime] = useState('');
+  const [unit, setUnit] = useState('seconds'); 
   const [notificationScheduled, setNotificationScheduled] = useState(false);
 
   const tasks = route.params.tasks;
-  const [existingTasks, setExistingTasks] = useState(tasks.map(
-    tasks => tasks.id
-  ));
+  const [existingTasks, setExistingTasks] = useState([]);
+
+  useEffect(() => {
+    if (tasks) {
+      setExistingTasks(tasks.map(task => task.id));
+    }
+  }, [tasks]);
 
   useEffect(() => {
     loadData();
@@ -95,7 +100,6 @@ const CreationScreen = ({ navigation, route }) => {
 
   const handleSave = async () => {
     if (!title.trim()) {
-      console.log('Title field is required');
       Alert.alert('Title field is required');
       return;
     }
@@ -110,6 +114,8 @@ const CreationScreen = ({ navigation, route }) => {
         ? dueDateDay + dueDateMonth + dueDateYear
         : null;
 
+    const expectedTimeString = `${expectedTime} ${unit}`;
+
     console.log('Saved:', {
       title,
       note,
@@ -121,7 +127,7 @@ const CreationScreen = ({ navigation, route }) => {
       dueDateDay,
       dueDateMonth,
       dueDateYear,
-      expectedTime,
+      expectedTimeString,
     });
 
     if (route.params.currentTaskID == null){
@@ -137,7 +143,7 @@ const CreationScreen = ({ navigation, route }) => {
         dueDateMonth,
         dueDateYear,
         dueDate,
-        expectedTime,  
+        expectedTimeString,  
       })
       route.params.currentTaskID = docRef.id;
       
@@ -157,7 +163,7 @@ const CreationScreen = ({ navigation, route }) => {
         dueDateDay,
         dueDateMonth,
         dueDateYear,
-        expectedTime,  
+        expectedTimeString,  
       })
     }
 
@@ -278,20 +284,30 @@ const CreationScreen = ({ navigation, route }) => {
         <TextInput
           style={styles.expectedTime}
           placeholder="Expected Time to Complete"
+          keyboardType="numeric"
           value={expectedTime}
-          onChangeText={setExpectedTime}
+          onChangeText={text => setExpectedTime(text.replace(/[^0-9]/g, ''))}
+        />
+        <ModalDropdown
+          style={styles.units}
+          options={['seconds', 'minutes', 'hours', 'days', 'months', 'years']}
+          onSelect={(index, value) => setUnit(value)}
+          defaultIndex={-1}
+          defaultValue="Units"
         />
         <SetReminderScreen
           title={title}
         />
       </View>
       <Text style={styles.hintText}>Hint: Title field is required</Text>
-      <TouchableOpacity style={styles.button} onPress={handleCancel}>
-        <Text style={styles.buttonText}>Cancel</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={handleSave}>
-        <Text style={styles.buttonText}>Save</Text>
-      </TouchableOpacity>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={handleCancel}>
+          <Text style={styles.buttonText}>Cancel</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleSave}>
+          <Text style={styles.buttonText}>Save</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -329,6 +345,11 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     marginTop: 10,
+    width: '40%',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     width: '100%',
   },
   buttonText: {
@@ -412,13 +433,22 @@ const styles = StyleSheet.create({
   },
   reminderContainer: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
   expectedTime: {
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
     padding: 10,
-    width: '60%',
+    width: 210,
+  },
+  units: {
+    width: 70,
+    height: 40,
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    marginLeft: 10,
     marginRight: 10,
   },
   hintText: {
