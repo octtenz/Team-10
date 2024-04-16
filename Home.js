@@ -145,30 +145,25 @@ const HomeScreen = ({navigation, route}) => {
     const sortTasksByTag = (selectedTag) => {
         const sortedTasks = [...tasks];
 
-        // Sort tasks so that tasks with the selected tag are at the top
         sortedTasks.sort((a, b) => {
             const aHasTag = a.selectedTags.some(tag => tag.text === selectedTag);
             const bHasTag = b.selectedTags.some(tag => tag.text === selectedTag);
 
-            // If both have the tag or neither have the tag, retain current order
             if ((aHasTag && bHasTag) || (!aHasTag && !bHasTag)) {
                 return 0;
             }
 
-            // If only task a has the tag, move it to the top
             if (aHasTag) {
                 return -1;
             }
 
-            // If only task b has the tag, move it to the top
             if (bHasTag) {
                 return 1;
             }
 
             return 0;
         });
-
-        // Update tasks state with sorted tasks
+        
         setTasks(sortedTasks);
     };
 
