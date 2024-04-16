@@ -2,10 +2,10 @@ import React, {useCallback, useEffect, useState} from 'react';
 import {FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, RefreshControl} from 'react-native';
 import {FontAwesome} from '@expo/vector-icons';
 import {FIREBASE_DB as db} from "./firebase-config";
-import Checkbox from 'expo-checkbox';
-import SortField from "./dropDownSort";
+// import Checkbox from 'expo-checkbox';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import {addDoc, collection} from "firebase/firestore";
+import {Dropdown} from "react-native-element-dropdown";
 
 //TODO add checkbox
 const HomeScreen = ({navigation, route}) => {
@@ -33,11 +33,23 @@ const HomeScreen = ({navigation, route}) => {
         }, 2000);
     }, []);
 
-    let [complete, setComplete] = React.useState([]);
+   // const [complete, setComplete] = React.useState([]); This will be used if we implement complete button
 
     let [tasks, setTasks] = useState([]);
 
     let [deleteList, setDeleteList] = useState([]);
+
+    const [additionalTags, setAdditionalTags] = React.useState([]);
+
+    const [tags, setTags] = useState([
+        { label: 'Work', value: '1' },
+        { label: 'School', value: '2' },
+        { label: 'High Priority', value: '3' },
+        { label: 'Low Priority', value: '4' },
+        { label: 'Personal', value: '5' }
+    ]);
+
+    const [selectedTag, setSelectedTag] = useState(null);
 
     useEffect(() => {
         fetchTasks();
@@ -59,11 +71,38 @@ const HomeScreen = ({navigation, route}) => {
                     return doc.data().TaskID;
                 });
             });
+
             tasks = tasks.filter(tasks => !deleteList.includes(tasks.id));
+
             setTasks(tasks);
+
+            tasks.map(tasks => tasks.selectedTags).forEach(item => item.forEach(item =>
+                additionalTags.includes(item.text) ? {} : additionalTags.push(item.text)
+            ));
+
+            setAdditionalTags(additionalTags);
+            addAdditionalTagsToTags();
+
             setRefreshing(false);
         });
     }, []);
+
+    const addAdditionalTagsToTags = () => {
+
+        let updatedTags = [...tags];
+
+        additionalTags.forEach(tag => {
+            const tagExists = updatedTags.some(existingTag => existingTag.label === tag);
+
+            if (!tagExists) {
+
+                const newValue = updatedTags.length + 1;
+                const newTag = { label: tag, value: newValue.toString() };
+                updatedTags.push(newTag);
+            }
+        });
+        setTags(updatedTags);
+    };
 
     const renderItem = ({item}) => (
         <View>
@@ -90,6 +129,7 @@ const HomeScreen = ({navigation, route}) => {
         });
         onRefresh();
     }
+
     const editTask = (id) => {
         route.params.tasks = tasks ;
         route.params.currentTaskID = id ;
@@ -101,7 +141,95 @@ const HomeScreen = ({navigation, route}) => {
         console.log("Tags? " + tags);
         navigation.navigate('Creation', route.params);
     }
-    
+
+    const sortTasksByTag = (selectedTag) => {
+        const sortedTasks = [...tasks];
+
+        // Sort tasks so that tasks with the selected tag are at the top
+        sortedTasks.sort((a, b) => {
+            const aHasTag = a.selectedTags.some(tag => tag.text === selectedTag);
+            const bHasTag = b.selectedTags.some(tag => tag.text === selectedTag);
+
+            // If both have the tag or neither have the tag, retain current order
+            if ((aHasTag && bHasTag) || (!aHasTag && !bHasTag)) {
+                return 0;
+            }
+
+            // If only task a has the tag, move it to the top
+            if (aHasTag) {
+                return -1;
+            }
+
+            // If only task b has the tag, move it to the top
+            if (bHasTag) {
+                return 1;
+            }
+
+            return 0;
+        });
+
+        // Update tasks state with sorted tasks
+        setTasks(sortedTasks);
+    };
+
+    const SortField = () => {
+        const [value, setValue] = useState(null);
+        const [isFocus, setIsFocus] = useState(false);
+
+        const renderLabel = () => {
+            if (value || isFocus) {
+                return (
+                    <Text style={[styles.label, isFocus && {color: 'blue'}]}>
+                        Sort by...
+                    </Text>
+                );
+            }
+            return null;
+        };
+
+        console.log('Current selected value:', value);
+
+        return (
+            <View style={styles.sortContainer}>
+                <SafeAreaView>
+                    {renderLabel()}
+                    <Dropdown
+                        style={[styles.dropdown, isFocus && {borderColor: 'blue'}]}
+                        placeholderStyle={styles.placeholderStyle}
+                        selectedTextStyle={styles.selectedTextStyle}
+                        inputSearchStyle={styles.inputSearchStyle}
+                        iconStyle={styles.iconStyle}
+                        data={tags}
+                        search
+                        maxHeight={300}
+                        labelField="label"
+                        valueField="value"
+                        placeholder={!isFocus ? 'Sort by...' : '...'}
+                        searchPlaceholder="Search..."
+                        value={value}
+                        onFocus={() => setIsFocus(true)}
+                        onBlur={() => setIsFocus(false)}
+                        onChange={item => {
+                            setValue(item.value);
+                            setIsFocus(false);
+                            setSelectedTag(item.label);
+                            sortTasksByTag(item.label);
+                        }}
+                        renderLeftIcon={() => (
+                            <AntDesign
+                                style={styles.icon}
+                                color={isFocus ? 'blue' : 'black'}
+                                name="Safety"
+                                size={20}
+                            />
+                        )}
+                    />
+                </SafeAreaView>
+            </View>
+
+        );
+    };
+
     return (
 
         <View style={styles.container}>
@@ -199,7 +327,42 @@ const styles = StyleSheet.create({
     listContainer: {
         marginBottom: 45,
         marginTop: 5,
-    }
+    },
+    dropdown: {
+        height: 50,
+        borderColor: 'gray',
+        borderWidth: 0.5,
+        borderRadius: 8,
+        paddingHorizontal: 8,
+    },
+    icon: {
+        marginRight: 5,
+    },
+    label: {
+        position: 'absolute',
+        left: 22,
+        top: 8,
+        zIndex: 999,
+        paddingHorizontal: 8,
+        fontSize: 14,
+    },
+    placeholderStyle: {
+        fontSize: 16,
+    },
+    selectedTextStyle: {
+        fontSize: 16,
+    },
+    iconStyle: {
+        width: 20,
+        height: 20,
+    },
+    inputSearchStyle: {
+        height: 40,
+        fontSize: 16,
+    },
+    sortContainer: {
+        padding: 16,
+    },
 });
 
 export default HomeScreen;
