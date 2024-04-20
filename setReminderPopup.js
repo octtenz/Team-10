@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     width: 60, 
   },
   closeButton: {
-    marginTop: 10,
+    marginTop: 20,
     color: 'blue',
   },
   button: {
