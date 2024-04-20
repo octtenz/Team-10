@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, Modal, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import ModalDropdown from 'react-native-modal-dropdown';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
 
 const AddTagsModal = ({ onTagSelect, tags }) => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -26,7 +28,11 @@ const AddTagsModal = ({ onTagSelect, tags }) => {
     <View style={styles.container}>
       <TouchableOpacity onPress={() => setModalVisible(true)}>
         <View style={styles.addButtonContainer}>
-          <Text style={styles.addButtonText}>Add Tag</Text>
+          <MaterialCommunityIcons
+              name={'tag-plus'}
+              color={"white"}
+              size={20}
+          />
         </View>
       </TouchableOpacity>
       <Modal
@@ -78,7 +84,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   addButtonContainer: {
-    padding: 15,
+    padding: 10,
     borderRadius: 5,
     backgroundColor: '#007BFF',
   },
