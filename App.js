@@ -1,10 +1,9 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { LoginScreen, ResetPasswordScreen } from './LoginAndResetPassword';
+import { LoginScreen, ResetPasswordScreen, SettingScreen } from './AccountScreens';
 import HomeScreen from './Home';
 import CreationScreen from './Creation';
-import SettingScreen from './Setting';
 import ActivityHistoryScreen from './ActivityHistory';
 import AnalysisScreen from './Analysis';
 
