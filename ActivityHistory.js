@@ -28,9 +28,11 @@ const ActivityHistoryScreen = ({navigation, route}) => {
 
     useEffect(() => {
         fetchActivity();
-    }, [taskTitleMap,taskNames]);
+    }, [fetchActivity]);
 
     const fetchActivity = useCallback( async () => {
+        console.log("Fetching activities...");
+
         const retrieveData = db.collection("Activity (" + route.params.email + ")");
         retrieveData.get().then((querySnapshot) => {
             activities = querySnapshot.docs.map((doc) => {

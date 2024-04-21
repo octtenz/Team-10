@@ -7,7 +7,8 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import {addDoc, collection} from "firebase/firestore";
 import {Dropdown} from "react-native-element-dropdown";
 
-//TODO add checkbox
+//TODO add checkbox, fix empty list bugging out buttons
+
 const HomeScreen = ({navigation, route}) => {
 
     const goToCreation = () => {
@@ -32,8 +33,6 @@ const HomeScreen = ({navigation, route}) => {
             setRefreshing(false);
         }, 2000);
     }, []);
-
-   // const [complete, setComplete] = React.useState([]); This will be used if we implement complete button
 
     let [tasks, setTasks] = useState([]);
 
@@ -65,7 +64,9 @@ const HomeScreen = ({navigation, route}) => {
                 return {id: doc.id, ...doc.data()}
             });
 
-            const checkDelete = db.collection("Activity (" + route.params.email + ")").where("Action", "==", "DELETE");
+            const checkDelete = db.collection("Activity (" + route.params.email + ")")
+                .where("Action", "in", ["DELETE", "COMPLETE"]);
+
             checkDelete.get().then((querySnapshot) => {
                 deleteList = querySnapshot.docs.map((doc) => {
                     return doc.data().TaskID;
@@ -119,11 +120,17 @@ const HomeScreen = ({navigation, route}) => {
                     size={20}
                 />
             </TouchableOpacity>
+            <TouchableOpacity onPress={() => completeTask(item.id)} style={styles.completeButton}>
+                <AntDesign
+                    name="check"
+                    size={20}
+                />
+            </TouchableOpacity>
         </View>
     );
 
     const deleteTask = async (id) => {
-        const deleteActivity = await addDoc(collection(db, "Activity (" + route.params.email + ")"), {
+        await addDoc(collection(db, "Activity (" + route.params.email + ")"), {
             Action: "DELETE",
             TaskID: id,
         });
@@ -140,6 +147,14 @@ const HomeScreen = ({navigation, route}) => {
         route.params.tags = tags;
         console.log("Tags? " + tags);
         navigation.navigate('Creation', route.params);
+    }
+
+    const completeTask = async (id) => {
+        await addDoc(collection(db, "Activity (" + route.params.email + ")"), {
+            Action: "COMPLETE",
+            TaskID: id,
+        });
+        onRefresh();
     }
 
     const sortTasksByTag = (selectedTag) => {
@@ -280,13 +295,13 @@ const styles = StyleSheet.create({
     },
     creationButton: {
         bottom: 30,
-        right: 20,
         backgroundColor: '#007BFF',
+        left: 30,
     },
     ActivityButton: {
         bottom: 30,
-        left: 20,
-        backgroundColor: '#009BFF',
+        right: 30,
+        backgroundColor: '#007BFF',
     },
     buttonText: {
         color: '#fff',
@@ -318,6 +333,14 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 15,
         right: 50,
+    },
+    completeButton: {
+        backgroundColor: '#0F9D58',
+        borderRadius: 10,
+        padding: 6,
+        position: 'absolute',
+        top: 15,
+        right: 85,
     },
     listContainer: {
         marginBottom: 45,
