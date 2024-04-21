@@ -4,6 +4,9 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
+  Keyboard,
+  ScrollView,
   StyleSheet,
   Alert,
 } from 'react-native';
@@ -16,7 +19,7 @@ import AddTagsModal from './addTagPopup.js';
 import SetReminderScreen from './setReminderPopup.js';
 import * as Notifications from 'expo-notifications';
 
-const CreationScreen = ({ navigation, route }) => {
+const TaskDetailScreen = ({ navigation, route }) => {
   const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
   const [parentTask, setParentTask] = useState('');
@@ -28,7 +31,7 @@ const CreationScreen = ({ navigation, route }) => {
   const [dueDateMonth, setDueDateMonth] = useState('');
   const [dueDateYear, setDueDateYear] = useState('');
   const [expectedTime, setExpectedTime] = useState('');
-  const [unit, setUnit] = useState('seconds'); 
+  const [unit, setUnit] = useState('hours'); 
   const [notificationScheduled, setNotificationScheduled] = useState(false);
 
   const tasks = route.params.tasks;
@@ -182,145 +185,157 @@ const CreationScreen = ({ navigation, route }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{route.params.currentTaskID == null ? "Create New Task" : "Edit Existing Task"}</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Title"
-        value={title}
-        onChangeText={setTitle}
-      />
-      <TextInput
-        style={[styles.input, styles.multiline]}
-        placeholder="Note"
-        multiline
-        value={note}
-        onChangeText={setNote}
-      />
-      <View style={styles.parentTaskContainer}>
-        <ModalDropdown
-          options={existingTasks.map(existingTasks => "id(" + existingTasks + "): " + tasks.find(obj => obj.id === existingTasks).title)}
-          onSelect={handleParentTask}
-          textStyle={styles.dropdownText}
-          dropdownTextStyle={styles.dropdownItemText}
-          dropdownStyle={styles.dropdown}
-          defaultIndex={0}
-          defaultValue="Select Parent Task"
-        />
-      </View>
-      <View style={styles.tagContainer}>
-        <Text style={styles.label}>Tag:</Text>
-        <View style={styles.tagInputs}>
-          {selectedTags.map((tag, index) => (
-            <TouchableOpacity
-              key={index}
-              onPress={() => toggleTagSelection(index)}
-              style={[
-                styles.tag,
-                {
-                  backgroundColor: tag.selected ? '#add8e6' : '#e6e6e6',
-                },
-              ]}
-            >
-              <Text style={styles.tagText}>{tag.text}</Text>
-              <TouchableOpacity onPress={() => removeTag(index)}>
-                <FontAwesome name="times" size={15} color="red" />
-              </TouchableOpacity>
-            </TouchableOpacity>
-          ))}
-        </View>
-        <AddTagsModal 
-          onTagSelect={handleTagSelect} 
-          tags={route.params && route.params.tags ? route.params.tags : []} 
-        />
-        </View>
-      <View style={styles.dateInputContainer}>
-        <Text style={styles.label}>Start Date:</Text>
-        <View style={styles.dateInputs}>
-          <TextInput
-            style={[styles.dateInput, styles.dayInput]}
-            placeholder="DD"
-            keyboardType="numeric"
-            maxLength={2}
-            value={startDateDay}
-            onChangeText={setStartDateDay}
-          />
-          <TextInput
-            style={[styles.dateInput, styles.monthInput]}
-            placeholder="MM"
-            keyboardType="numeric"
-            maxLength={2}
-            value={startDateMonth}
-            onChangeText={setStartDateMonth}
-          />
-          <TextInput
-            style={[styles.dateInput, styles.yearInput]}
-            placeholder="YYYY"
-            keyboardType="numeric"
-            maxLength={4}
-            value={startDateYear}
-            onChangeText={setStartDateYear}
-          />
-        </View>
-      </View>
-      <View style={styles.dateInputContainer}>
-        <Text style={styles.label}>Due Date:</Text>
-        <View style={styles.dateInputs}>
-          <TextInput
-            style={[styles.dateInput, styles.dayInput]}
-            placeholder="DD"
-            keyboardType="numeric"
-            maxLength={2}
-            value={dueDateDay}
-            onChangeText={setDueDateDay}
-          />
-          <TextInput
-            style={[styles.dateInput, styles.monthInput]}
-            placeholder="MM"
-            keyboardType="numeric"
-            maxLength={2}
-            value={dueDateMonth}
-            onChangeText={setDueDateMonth}
-          />
-          <TextInput
-            style={[styles.dateInput, styles.yearInput]}
-            placeholder="YYYY"
-            keyboardType="numeric"
-            maxLength={4}
-            value={dueDateYear}
-            onChangeText={setDueDateYear}
-          />
-        </View>
-      </View>
-      <View style={styles.reminderContainer}>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={styles.container}>
+        <Text style={styles.title}>{route.params.currentTaskID == null ? "Create New Task" : "Edit Existing Task"}</Text>
+        <Text style={styles.hintText}>Hint: Title field is required</Text>
         <TextInput
-          style={styles.expectedTime}
-          placeholder="Expected Time to Complete"
-          keyboardType="numeric"
-          value={expectedTime}
-          onChangeText={text => setExpectedTime(text.replace(/[^0-9]/g, ''))}
+          style={[styles.input,{fontSize: 20}]}
+          placeholder="Title"
+          value={title}
+          onChangeText={setTitle}
         />
-        <ModalDropdown
-          style={styles.units}
-          options={['seconds', 'minutes', 'hours', 'days', 'months', 'years']}
-          onSelect={(index, value) => setUnit(value)}
-          defaultIndex={0}
-          defaultValue="Units"
+        <TextInput
+          style={[styles.input, styles.multiline,{fontSize: 16}]}
+          placeholder="Note"
+          multiline
+          value={note}
+          onChangeText={setNote}
         />
-        <SetReminderScreen
-          title={title}
-        />
+        <View style={styles.parentTaskContainer}>
+          <ModalDropdown
+            options={existingTasks.map(existingTasks => "id(" + existingTasks + "): " + tasks.find(obj => obj.id === existingTasks).title)}
+            onSelect={handleParentTask}
+            textStyle={styles.dropdownText}
+            dropdownTextStyle={styles.dropdownItemText}
+            dropdownStyle={styles.dropdown}
+            defaultIndex={0}
+            defaultValue="Select Parent Task"
+          />
+        </View>
+        <View style={styles.tagContainer}>
+          <View style={[{flexDirection: "col", width:"15%"}]}>
+            <Text style={styles.label}>Tag:</Text>
+            <AddTagsModal 
+              onTagSelect={handleTagSelect} 
+              tags={route.params && route.params.tags ? route.params.tags : []} 
+            />
+          </View>
+
+          <View style={styles.tagInputs}>
+            <ScrollView contentContainerStyle={[{flexDirection: 'row', flexWrap: 'wrap'}]}>
+              {selectedTags.map((tag, index) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => toggleTagSelection(index)}
+                  style={[
+                    styles.tag,
+                    {
+                      backgroundColor: tag.selected ? '#add8e6' : '#e6e6e6',
+                    },
+                  ]}
+                  multiline
+                >
+                  <Text style={styles.tagText}>{tag.text}</Text>
+                  <TouchableOpacity onPress={() => removeTag(index)}>
+                    <FontAwesome name="times" size={15} color="red" />
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              ))}
+          </ScrollView>
+          </View>
+          </View>
+        <View style={styles.dateInputContainer}>
+          <Text style={styles.label}>Start Date:</Text>
+          <View style={styles.dateInputs}>
+            <TextInput
+              style={[styles.dateInput, styles.dayInput]}
+              placeholder="DD"
+              keyboardType="numeric"
+              maxLength={2}
+              value={startDateDay}
+              onChangeText={setStartDateDay}
+            />
+            <Text style={[{fontSize:20}]}> /</Text>
+            <TextInput
+              style={[styles.dateInput, styles.monthInput]}
+              placeholder="MM"
+              keyboardType="numeric"
+              maxLength={2}
+              value={startDateMonth}
+              onChangeText={setStartDateMonth}
+            />
+            <Text style={[{fontSize:20}]}> /</Text>
+            <TextInput
+              style={[styles.dateInput, styles.yearInput]}
+              placeholder="YYYY"
+              keyboardType="numeric"
+              maxLength={4}
+              value={startDateYear}
+              onChangeText={setStartDateYear}
+            />
+          </View>
+        </View>
+        <View style={styles.dateInputContainer}>
+          <Text style={styles.label}>Due Date:</Text>
+          <View style={styles.dateInputs}>
+            <TextInput
+              style={[styles.dateInput, styles.dayInput]}
+              placeholder="DD"
+              keyboardType="numeric"
+              maxLength={2}
+              value={dueDateDay}
+              onChangeText={setDueDateDay}
+            />
+            <Text style={[{fontSize:20}]}> /</Text>
+            <TextInput
+              style={[styles.dateInput, styles.monthInput]}
+              placeholder="MM"
+              keyboardType="numeric"
+              maxLength={2}
+              value={dueDateMonth}
+              onChangeText={setDueDateMonth}
+            />
+            <Text style={[{fontSize:20}]}> /</Text>
+            <TextInput
+              style={[styles.dateInput, styles.yearInput]}
+              placeholder="YYYY"
+              keyboardType="numeric"
+              maxLength={4}
+              value={dueDateYear}
+              onChangeText={setDueDateYear}
+            />
+          </View>
+        </View>
+        <View style={styles.reminderContainer}>
+          <TextInput
+            style={styles.expectedTime}
+            placeholder="Expected Time to Complete"
+            keyboardType="numeric"
+            value={expectedTime}
+            onChangeText={text => setExpectedTime(text.replace(/[^0-9]/g, ''))}
+          />
+          <ModalDropdown
+            style={styles.units}
+            options={['seconds', 'minutes', 'hours', 'days', 'months', 'years']}
+            onSelect={(index, value) => setUnit(value)}
+            defaultIndex={0}
+            defaultValue= {unit}
+          />
+          <SetReminderScreen
+            title={title}
+          />
+        </View>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.button} onPress={handleCancel}>
+            <Text style={styles.buttonText}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={handleSave}>
+            <Text style={styles.buttonText}>Save</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-      <Text style={styles.hintText}>Hint: Title field is required</Text>
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={handleCancel}>
-          <Text style={styles.buttonText}>Cancel</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleSave}>
-          <Text style={styles.buttonText}>Save</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -333,12 +348,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   title: {
-    fontSize: 16,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-    width: '100%',
-  },
+    marginBottom: 50,
+    color: '#379EE8',
+    left: 90,
+},
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -348,7 +363,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   multiline: {
-    height: 40,
+    height: 100,
     textAlignVertical: 'top',
   },
   button: {
@@ -363,6 +378,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
+    marginTop: 30,
   },
   buttonText: {
     color: '#FFF',
@@ -398,13 +414,20 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   tagInputs: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'left',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    height: 90,
+    marginLeft: "5%",
+    width: "80%",
   },
   tag: {
     flexDirection: 'row',
     alignItems: 'center',
     marginRight: 10,
+    marginBottom: 10,
     padding: 5,
     borderRadius: 5,
     borderColor: '#ccc',
@@ -418,7 +441,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   label: {
-    fontSize: 16,
+    fontSize: 20,
     marginRight: 10,
     textAlign: 'left',
   },
@@ -430,9 +453,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
-    padding: 10,
+    paddingHorizontal: 10,
     width: 60,
-    height: 20,
+    height: 30,
+    marginLeft: 10,
   },
   dayInput: {
     marginRight: '2%',
@@ -455,7 +479,7 @@ const styles = StyleSheet.create({
     width: 210,
   },
   units: {
-    width: 70,
+    width: 80,
     height: 40,
     borderWidth: 1,
     borderRadius: 5,
@@ -469,4 +493,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CreationScreen;
+export default TaskDetailScreen;
