@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
-import {FIREBASE_DB as db} from "./firebase-config";
+import {FIREBASE_DB} from "./firebase-config";
 
 const AnalysisScreen = () => {
   const [data, setData] = useState({
@@ -10,121 +10,51 @@ const AnalysisScreen = () => {
     categories: { remainingTasks: {}, completedTasks: {} }
   });
 
+// Fetch data from Firebase
   useEffect(() => {
-    // example data just to see format
-    const currentPeriodData = [{ day: 1, month: 'January', year: 2024 }];
-    const lastPeriodData = [{ day: 1, month: 'December', year: 2023 }];
-
-    const mostProductiveTimeData = { day: 'Your most productive time is on Monday', timePeriod: 'between 10:30 and 11:30 am !' };
-
-    const categoriesData = {
-      remainingTasks: { Math: 5, Science: 3 },
-      completedTasks: { Math: 10, Science: 7 }
-    };
-
-    setData({
-      currentPeriod: currentPeriodData,
-      lastPeriod: lastPeriodData,
-      mostProductiveTime: mostProductiveTimeData,
-      categories: categoriesData
-    });
-  }, []);
-
-  //fetching data from firebase
-  useEffect(() => {
-    const fetchCategoriesData = async () => {
+    const fetchData = async () => {
       try {
-        const categoriesRef = FIREBASE_DB.collection('categories');
-        const snapshot = await categoriesRef.get();
+        // Fetch current period data
+        const currentPeriodSnapshot = await db.collection('currentPeriod').get();
+        const currentPeriodData = currentPeriodSnapshot.docs.map(doc => doc.data());
 
-        if (!snapshot.empty) {
-          let remainingTasks = {};
-          let completedTasks = {};
+        // Fetch last period data
+        const lastPeriodSnapshot = await db.collection('lastPeriod').get();
+        const lastPeriodData = lastPeriodSnapshot.docs.map(doc => doc.data());
 
-          snapshot.forEach((doc) => {
-            const { tag, status } = doc.data();
-            if (status === 'remaining') {
-              remainingTasks[tag] = (remainingTasks[tag] || 0) + 1;
-            } else if (status === 'completed') {
-              completedTasks[tag] = (completedTasks[tag] || 0) + 1;
-            }
-          });
+        // Fetch most productive time data
+        const mostProductiveTimeSnapshot = await db.collection('mostProductiveTime').get();
+        let mostProductiveTimeData = {};
+        mostProductiveTimeSnapshot.forEach(doc => {
+          mostProductiveTimeData = doc.data();
+        });
 
-          setData((prevData) => ({
-            ...prevData,
-            categories: { remainingTasks, completedTasks }
-          }));
-        }
-      } catch (error) {
-        console.error('Error fetching categories data:', error);
-      }
-    };
+        // Fetch categories data
+        const categoriesSnapshot = await db.collection('categories').get();
+        let remainingTasks = {};
+        let completedTasks = {};
+        categoriesSnapshot.forEach(doc => {
+          const { tag, status } = doc.data();
+          if (status === 'remaining') {
+            remainingTasks[tag] = (remainingTasks[tag] || 0) + 1;
+          } else if (status === 'completed') {
+            completedTasks[tag] = (completedTasks[tag] || 0) + 1;
+          }
+        });
 
-    fetchCategoriesData();
-  }, []);
-
-  const [showAddTagsModal, setShowAddTagsModal] = useState(false);
-  const [selectedTag, setSelectedTag] = useState('');
-
-  const handleTagSelect = (tag) => {
-    setSelectedTag(tag);
-    setShowAddTagsModal(false);
-  };
-
-  //fetching data from firebase for you completed section
-  useEffect(() => {
-    const fetchCompletedTasksData = async () => {
-      try {
-        const currentPeriodSnapshot = await FIREBASE_DB.collection('completedTasks')
-          .where('period', '==', 'current')
-          .get();
-
-        const lastPeriodSnapshot = await FIREBASE_DB.collection('completedTasks')
-          .where('period', '==', 'last')
-          .get();
-
-        const currentPeriodData = currentPeriodSnapshot.docs.map((doc) => doc.data());
-        const lastPeriodData = lastPeriodSnapshot.docs.map((doc) => doc.data());
-
-        setData((prevData) => ({
-          ...prevData,
+        // Update state with fetched data
+        setData({
           currentPeriod: currentPeriodData,
-          lastPeriod: lastPeriodData
-        }));
+          lastPeriod: lastPeriodData,
+          mostProductiveTime: mostProductiveTimeData,
+          categories: { remainingTasks, completedTasks }
+        });
       } catch (error) {
-        console.error('Error fetching completed tasks data:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
-    fetchCompletedTasksData();
-  }, []);
-
-  //fetching data for the most productive time section
-  useEffect(() => {
-    const fetchMostProductiveTimeData = async () => {
-      try {
-        const mostProductiveTimeRef = FIREBASE_DB.collection('mostProductiveTime');
-        const snapshot = await mostProductiveTimeRef.get();
-
-        if (!snapshot.empty) {
-          let mostProductiveTimeData = {};
-
-          snapshot.forEach((doc) => {
-            const { day, timePeriod } = doc.data();
-            mostProductiveTimeData = { day, timePeriod };
-          });
-
-          setData((prevData) => ({
-            ...prevData,
-            mostProductiveTime: mostProductiveTimeData
-          }));
-        }
-      } catch (error) {
-        console.error('Error fetching most productive time data:', error);
-      }
-    };
-
-    fetchMostProductiveTimeData();
+    fetchData();
   }, []);
 
   return (
