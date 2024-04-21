@@ -76,6 +76,7 @@ const ActivityHistoryScreen = ({navigation, route}) => {
         <View style={styles.container}>
             <SafeAreaView>
                 <Text style={styles.title}>Activity History</Text>
+                <Text>Note: Please refresh to see the task title</Text>
                 <FlatList
                     data={activities}
                     renderItem={renderItem}
