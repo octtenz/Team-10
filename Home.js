@@ -11,9 +11,9 @@ import {Dropdown} from "react-native-element-dropdown";
 
 const HomeScreen = ({navigation, route}) => {
 
-    const goToCreation = () => {
+    const goToTaskDetail = () => {
         route.params.currentTaskID = null ;
-        navigation.navigate('Creation', route.params);
+        navigation.navigate('Task Detail', route.params);
     };
 
     const goToSettings = () => {
@@ -146,7 +146,7 @@ const HomeScreen = ({navigation, route}) => {
         ));
         route.params.tags = tags;
         console.log("Tags? " + tags);
-        navigation.navigate('Creation', route.params);
+        navigation.navigate('Task Detail', route.params);
     }
 
     const completeTask = async (id) => {
@@ -249,12 +249,12 @@ const HomeScreen = ({navigation, route}) => {
                     <FontAwesome name="cog" size={24} color="black"/>
                 </TouchableOpacity>
                 {tasks.length === 0 && (
-                    <TouchableOpacity onPress={goToCreation} style={[styles.creationButton, styles.button]}>
+                    <TouchableOpacity onPress={goToTaskDetail} style={[styles.creationButton, styles.button]}>
                         <Text style={styles.buttonText}>Create Task</Text>
                     </TouchableOpacity>
                 )}
                 {tasks.length > 0 && (
-                    <TouchableOpacity onPress={goToCreation} style={[styles.creationButtonWithTasks, styles.button]}>
+                    <TouchableOpacity onPress={goToTaskDetail} style={[styles.creationButtonWithTasks, styles.button]}>
                         <Text style={styles.buttonText}>Create Task</Text>
                     </TouchableOpacity>
                 )}
