@@ -248,9 +248,16 @@ const HomeScreen = ({navigation, route}) => {
                 <TouchableOpacity onPress={goToSettings} style={[styles.settingButton, styles.button]}>
                     <FontAwesome name="cog" size={24} color="black"/>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={goToCreation} style={[styles.creationButton, styles.button]}>
-                    <Text style={styles.buttonText}>Create Task</Text>
-                </TouchableOpacity>
+                {tasks.length === 0 && (
+                    <TouchableOpacity onPress={goToCreation} style={[styles.creationButton, styles.button]}>
+                        <Text style={styles.buttonText}>Create Task</Text>
+                    </TouchableOpacity>
+                )}
+                {tasks.length > 0 && (
+                    <TouchableOpacity onPress={goToCreation} style={[styles.creationButtonWithTasks, styles.button]}>
+                        <Text style={styles.buttonText}>Create Task</Text>
+                    </TouchableOpacity>
+                )}
                 <TouchableOpacity onPress={goToActivity} style={[styles.ActivityButton, styles.button]}>
                     <Text style={styles.buttonText}>Activity History</Text>
                 </TouchableOpacity>
@@ -294,6 +301,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#ddd',
     },
     creationButton: {
+        bottom: 30,
+        backgroundColor: '#007BFF',
+        left: -110,
+    },
+    creationButtonWithTasks: {
         bottom: 30,
         backgroundColor: '#007BFF',
         left: 30,
