@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, Button, Image, TextInput, ActivityIndicator, Alert } from 'react-native';
-import { FIREBASE_AUTH } from './firebase-config';
+import { FIREBASE_AUTH } from './firebase-config.js';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, getAuth } from 'firebase/auth';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import EmailPopup from './emailPopup.js';
@@ -269,6 +269,68 @@ const ResetPasswordScreen = ({ navigation, route }) => {
     );
 };
 
+const SettingScreen = ({ navigation, route}) => {
+    const [showPassword, setShowPassword] = useState(false);
+    const handleShowPassword = () => {
+        setShowPassword(!showPassword);
+    };
+    
+    const handleChangePassword = () => {
+      navigation.navigate('Reset Password', route.params);
+    };
+  
+    const handleReviewAnalysisReport = () => {
+      navigation.navigate('Analysis', route.params);
+    };
+  
+    return (
+        <View style={styles.container}>
+            <MaterialCommunityIcons
+                name={'account-circle'}
+                size="100"
+            />
+
+            <View style={styles.col}>
+                <Text style={styles.label}>Email:</Text>
+                
+                <View style={[styles.inputView, styles.row]}>
+                    <Text style={styles.inputText}>{route.params.email}</Text>
+                    <Image style={styles.showPasswordButton} />
+                </View>
+
+                <Text style={styles.label}>Password:</Text>
+                
+                <View style={[styles.inputView, styles.row]}>
+                    <Text style={styles.inputText}>{ showPassword? route.params.password : "*****************"}</Text>
+
+                    <MaterialCommunityIcons
+                        name={showPassword ? 'eye-off' : 'eye'}
+                        size={24}
+                        style={styles.showPasswordButton}
+                        onPress={handleShowPassword}
+                    />
+                </View>
+            </View>
+
+            <View style={[styles.buttonView, {width:280, marginTop:50}]}>
+                <Button
+                    onPress={handleChangePassword}
+                    title='Change Password'
+                    color='#000000'
+                />
+            </View>
+
+            <View style={[styles.buttonView, {width:280, marginTop:20}]}>
+                <Button
+                    onPress={handleReviewAnalysisReport}
+                    title='Review Analysis Report'
+                    color='#000000'
+                />
+            </View>
+        </View>
+    );
+  };
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -329,4 +391,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export { LoginScreen, ResetPasswordScreen };
+export { LoginScreen, ResetPasswordScreen, SettingScreen };
