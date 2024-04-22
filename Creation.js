@@ -14,7 +14,7 @@ import ModalDropdown from 'react-native-modal-dropdown';
 import { FontAwesome } from '@expo/vector-icons';
 
 import { FIREBASE_DB } from './firebase-config.js';
-import { addDoc, collection, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { Timestamp, addDoc, collection, doc, getDoc, updateDoc } from 'firebase/firestore';
 import AddTagsModal from './addTagPopup.js';
 import SetReminderScreen from './setReminderPopup.js';
 import * as Notifications from 'expo-notifications';
@@ -155,7 +155,8 @@ const TaskDetailScreen = ({ navigation, route }) => {
       
       const docRef2 = await addDoc(collection(FIREBASE_DB, "Activity (" + route.params.email + ")"), {
         Action: "ADD",
-        TaskID: docRef.id
+        TaskID: docRef.id,
+        Time: firebase.firestore.FieldValue.serverTimestamp()
       });  
     }else{
       const docRef = await updateDoc(doc(FIREBASE_DB, "Task (" + route.params.email + ")", route.params.currentTaskID), {
@@ -175,7 +176,8 @@ const TaskDetailScreen = ({ navigation, route }) => {
 
       const docRef2 = await addDoc(collection(FIREBASE_DB, "Activity (" + route.params.email + ")"), {
         Action: "EDIT",
-        TaskID: route.params.currentTaskID
+        TaskID: route.params.currentTaskID,
+        Time: firebase.firestore.FieldValue.serverTimestamp()
       });  
     }
 
