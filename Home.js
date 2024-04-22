@@ -59,18 +59,18 @@ const HomeScreen = ({navigation, route}) => {
         console.log("Fetching... (using a read)");
 
         const retrieveData = db.collection("Task (" + route.params.email + ")");
-        retrieveData.get().then((querySnapshot) => {
-            tasks = querySnapshot.docs.map((doc) => {
-                return {id: doc.id, ...doc.data()}
-            });
+        const querySnapshot = await retrieveData.get();
+
+        let tasks = querySnapshot.docs.map((doc) => {
+            return { id: doc.id, ...doc.data() };
+        });
 
             const checkDelete = db.collection("Activity (" + route.params.email + ")")
                 .where("Action", "in", ["DELETE", "COMPLETE"]);
 
-            checkDelete.get().then((querySnapshot) => {
-                deleteList = querySnapshot.docs.map((doc) => {
-                    return doc.data().TaskID;
-                });
+            const deleteQuerySnapshot = await checkDelete.get();
+            const deleteList = deleteQuerySnapshot.docs.map((doc) => {
+                return doc.data().TaskID;
             });
 
             tasks = tasks.filter(tasks => !deleteList.includes(tasks.id));
@@ -85,7 +85,6 @@ const HomeScreen = ({navigation, route}) => {
             addAdditionalTagsToTags();
 
             setRefreshing(false);
-        });
     }, []);
 
     const addAdditionalTagsToTags = () => {
