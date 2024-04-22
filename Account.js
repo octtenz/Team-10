@@ -283,6 +283,10 @@ const SettingScreen = ({ navigation, route}) => {
       navigation.navigate('Analysis', route.params);
     };
   
+    const handleSignOut = () => {
+        navigation.navigate('Login');
+      };
+
     return (
         <View style={styles.container}>
             <MaterialCommunityIcons
@@ -327,6 +331,14 @@ const SettingScreen = ({ navigation, route}) => {
                     color='#000000'
                 />
             </View>
+            
+            <View style={[styles.buttonView, {width:280, marginTop:50}]}>
+                 <Button
+                     onPress={handleSignOut}
+                     title='Sign Out'
+                     color='#000000'
+                 />
+             </View>
         </View>
     );
   };
