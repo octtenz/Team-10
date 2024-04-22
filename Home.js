@@ -241,25 +241,11 @@ const HomeScreen = ({navigation, route}) => {
     };
 
     return (
-
         <View style={styles.container}>
             <SafeAreaView>
                 <Text style={styles.title}>Home Screen</Text>
                 <TouchableOpacity onPress={goToSettings} style={[styles.settingButton, styles.button]}>
                     <FontAwesome name="cog" size={24} color="black"/>
-                </TouchableOpacity>
-                {tasks.length === 0 && (
-                    <TouchableOpacity onPress={goToTaskDetail} style={[styles.creationButton, styles.button]}>
-                        <Text style={styles.buttonText}>Create Task</Text>
-                    </TouchableOpacity>
-                )}
-                {tasks.length > 0 && (
-                    <TouchableOpacity onPress={goToTaskDetail} style={[styles.creationButtonWithTasks, styles.button]}>
-                        <Text style={styles.buttonText}>Create Task</Text>
-                    </TouchableOpacity>
-                )}
-                <TouchableOpacity onPress={goToActivity} style={[styles.ActivityButton, styles.button]}>
-                    <Text style={styles.buttonText}>Activity History</Text>
                 </TouchableOpacity>
                 <SortField/>
                 <FlatList style={styles.listContainer}
@@ -268,6 +254,14 @@ const HomeScreen = ({navigation, route}) => {
                           keyExtractor={(item) => item.id}
                           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh}/>}
                 />
+                <View style={styles.bottomButtonsContainer}>
+                    <TouchableOpacity onPress={goToTaskDetail} style={styles.creationButton}>
+                        <Text style={styles.buttonText}>Create Task</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={goToActivity} style={styles.ActivityButton}>
+                        <Text style={styles.buttonText}>Activity History</Text>
+                    </TouchableOpacity>
+                </View>
             </SafeAreaView>
         </View>
 
@@ -289,6 +283,12 @@ const styles = StyleSheet.create({
         color: '#379EE8',
         left: 90,
     },
+    bottomButtonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        marginBottom: 10,
+    },
     button: {
         position: 'absolute',
         borderRadius: 5,
@@ -296,24 +296,27 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    settingButton: {
-        right: 1,
-        backgroundColor: '#ddd',
-    },
     creationButton: {
-        bottom: 30,
+        borderRadius: 5,
+        padding: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
         backgroundColor: '#007BFF',
-        left: -110,
-    },
-    creationButtonWithTasks: {
-        bottom: 30,
-        backgroundColor: '#007BFF',
-        left: 30,
-    },
+        marginRight: 80,
+    },   
     ActivityButton: {
-        bottom: 30,
-        right: 30,
+        borderRadius: 5,
+        padding: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
         backgroundColor: '#007BFF',
+    },
+    settingButton: {
+        borderRadius: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#ddd',
+        right: 5,
     },
     buttonText: {
         color: '#fff',
