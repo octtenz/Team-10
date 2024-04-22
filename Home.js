@@ -51,8 +51,12 @@ const HomeScreen = ({navigation, route}) => {
     const [selectedTag, setSelectedTag] = useState(null);
 
     useEffect(() => {
-        fetchTasks();
-    }, [fetchTasks]);
+        const unsubscribe = navigation.addListener('focus', () => {
+            fetchTasks();
+        });
+    
+        return unsubscribe;
+    }, [navigation, fetchTasks]);    
 
     const fetchTasks = useCallback(async () => {
 
