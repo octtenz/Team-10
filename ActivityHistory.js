@@ -27,37 +27,34 @@ const ActivityHistoryScreen = ({navigation, route}) => {
     }, []);
 
     useEffect(() => {
-        fetchActivity();
-    }, [fetchActivity]);
+        const unsubscribe = navigation.addListener('focus', () => {
+            fetchActivity();
+        });
+        return unsubscribe;
+    }, [navigation, fetchActivity]);    
 
     const fetchActivity = useCallback( async () => {
         console.log("Fetching activities...");
 
         const retrieveData = db.collection("Activity (" + route.params.email + ")");
-        retrieveData.get().then((querySnapshot) => {
-            activities = querySnapshot.docs.map((doc) => {
-                return {id: doc.id, ...doc.data()}
-            });
-
-            setActivities(activities);
-
-            const taskTitleQuery = db.collection("Task (" + route.params.email + ")");
-            taskTitleQuery.get().then((querySnapshot) => {
-                taskNames = querySnapshot.docs.map((doc) => {
-                    return {id: doc.id, title: doc.data().title}
-                });
-            });
-
+        const querySnapshot = await retrieveData.get();
+        let activities = querySnapshot.docs.map((doc) => {
+            return { id: doc.id, ...doc.data() };
+        });
+        setActivities(activities);
+        const taskTitleQuery = db.collection("Task (" + route.params.email + ")");
+        taskTitleQuery.get().then((querySnapshot) => {
+            let taskNames = querySnapshot.docs.map((doc) => {
+                return {id: doc.id, title: doc.data().title}
+            });          
             setTaskNames(taskNames);
-
+            let taskTitleMap = {};
             taskNames.forEach(doc => {
                 taskTitleMap[doc.id] = doc.title;
             });
-
             setTaskTitleMap(taskTitleMap);
-
-            setRefreshing(false);
         });
+            setRefreshing(false);
     }, []);
 
     const renderItem = ({item}) => (
