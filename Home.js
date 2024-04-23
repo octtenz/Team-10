@@ -4,7 +4,7 @@ import {FontAwesome} from '@expo/vector-icons';
 import {FIREBASE_DB as db} from "./firebase-config";
 // import Checkbox from 'expo-checkbox';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import {addDoc, collection} from "firebase/firestore";
+import {serverTimestamp, addDoc, collection} from "firebase/firestore";
 import {Dropdown} from "react-native-element-dropdown";
 
 //TODO add checkbox, fix empty list bugging out buttons
@@ -164,6 +164,7 @@ const HomeScreen = ({navigation, route}) => {
         await addDoc(collection(db, "Activity (" + route.params.email + ")"), {
             Action: "DELETE",
             TaskID: id,
+            Time: serverTimestamp()
         });
         onRefresh();
     }
@@ -184,6 +185,7 @@ const HomeScreen = ({navigation, route}) => {
         await addDoc(collection(db, "Activity (" + route.params.email + ")"), {
             Action: "COMPLETE",
             TaskID: id,
+            Time: serverTimestamp()
         });
         onRefresh();
     }
