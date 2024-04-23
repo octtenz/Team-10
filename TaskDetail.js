@@ -30,7 +30,7 @@ const TaskDetailScreen = ({ navigation, route }) => {
   const [dueDateMonth, setDueDateMonth] = useState('');
   const [dueDateYear, setDueDateYear] = useState('');
   const [expectedTime, setExpectedTime] = useState('');
-  const [unit, setUnit] = useState('hours'); 
+  const [unit, setUnit] = useState(''); 
   const [notificationScheduled, setNotificationScheduled] = useState(false);
 
   const tasks = route.params.tasks;
@@ -44,13 +44,16 @@ const TaskDetailScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [tasks]);
+
   const loadData = () => {
     if(route.params.currentTaskID != null){
       const currentTask = tasks.find(obj => obj.id === route.params.currentTaskID);
       setTitle(currentTask.title)
       setNote(currentTask.note)
-      setParentTask(currentTask.parentTask)
+      const parentTaskId = currentTask.parentTask;
+      const parentTask = parentTaskId ? tasks.find(task => task.id === parentTaskId)?.title || '' : '';
+      setParentTask(parentTask)
       setSelectedTags(currentTask.selectedTags)
       setStartDateDay(currentTask.startDateDay)
       setStartDateMonth(currentTask.startDateMonth)
@@ -60,12 +63,15 @@ const TaskDetailScreen = ({ navigation, route }) => {
       setDueDateYear(currentTask.dueDateYear)
       setExpectedTime(currentTask.expectedTime)
       setUnit(currentTask.unit)
-      setExistingTasks(existingTasks.filter((item) => item !== route.params.currentTaskID))
+      setExistingTasks(tasks.map(task => task.id).filter((item) => item !== route.params.currentTaskID));
     }
   }
 
-  const handleParentTask = (index, value) => {
-    setParentTask(value);
+  const handleParentTask = (index) => {
+    const selectedTaskId = existingTasks[index]; 
+    const selectedTask = tasks.find(task => task.id === selectedTaskId); 
+    const selectedTaskTitle = selectedTask ? selectedTask.title : ''; 
+    setParentTask(selectedTaskTitle);
   };
 
   const removeTag = (index) => {
@@ -151,6 +157,18 @@ const TaskDetailScreen = ({ navigation, route }) => {
         unit,
       })
       route.params.currentTaskID = docRef.id;
+
+      if (parentTask) {
+        // Get the parent task object
+        const parentTaskObj = tasks.find(task => task.title === parentTask);
+        if (parentTaskObj) {
+          // Add task A as a subtask of the parent task
+          const parentTaskId = parentTaskObj.id;
+          await updateDoc(doc(FIREBASE_DB, "Task (" + route.params.email + ")", parentTaskId), {
+            subtasks: [...parentTaskObj.subtasks, docRef.id], // Assuming subtasks is an array field in the database
+          });
+        }
+      }
       
       const docRef2 = await addDoc(collection(FIREBASE_DB, "Activity (" + route.params.email + ")"), {
         Action: "ADD",

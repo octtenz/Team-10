@@ -54,7 +54,6 @@ const HomeScreen = ({navigation, route}) => {
         const unsubscribe = navigation.addListener('focus', () => {
             fetchTasks();
         });
-    
         return unsubscribe;
     }, [navigation, fetchTasks]);    
 
@@ -66,8 +65,18 @@ const HomeScreen = ({navigation, route}) => {
         const querySnapshot = await retrieveData.get();
 
         let tasks = querySnapshot.docs.map((doc) => {
-            return { id: doc.id, ...doc.data() };
+            return { id: doc.id, ...doc.data(), subtasks: [] };
         });
+
+        await Promise.all(tasks.map(async task => {
+            const subtaskSnapshot = await db.collection("Subtask (" + route.params.email + ")")
+                .where("parentTaskID", "==", task.id)
+                .get();
+    
+            task.subtasks = subtaskSnapshot.docs.map((doc) => {
+                return { id: doc.id, ...doc.data() };
+            });
+        }));
 
             const checkDelete = db.collection("Activity (" + route.params.email + ")")
                 .where("Action", "in", ["DELETE", "COMPLETE"]);
@@ -108,29 +117,48 @@ const HomeScreen = ({navigation, route}) => {
         setTags(updatedTags);
     };
 
-    const renderItem = ({item}) => (
-        <View>
-            <Text style={styles.item}>{item.title}</Text>
-            <TouchableOpacity onPress={() => deleteTask(item.id)} style={styles.deleteButton}>
-                <AntDesign
-                    name="delete"
-                    size={20}
-                />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => editTask(item.id)} style={styles.editButton}>
-                <AntDesign
-                    name="edit"
-                    size={20}
-                />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => completeTask(item.id)} style={styles.completeButton}>
-                <AntDesign
-                    name="check"
-                    size={20}
-                />
-            </TouchableOpacity>
-        </View>
-    );
+    const renderItem = ({ item }) => {
+        if (item.parentTask !== '') {
+            return null;
+        }
+    
+        const subtasks = tasks.filter((task) => task.parentTask === item.title);
+    
+        return (
+            <View style={styles.itemContainer}>
+                <View style={styles.taskContainer}>
+                    <Text style={styles.item}>{item.title}</Text>
+                    <View style={styles.actionButtonsContainer}>
+                        <TouchableOpacity onPress={() => deleteTask(item.id)} style={styles.deleteButton}>
+                            <AntDesign name="delete" size={20} />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => editTask(item.id)} style={styles.editButton}>
+                            <AntDesign name="edit" size={20} />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => completeTask(item.id)} style={styles.completeButton}>
+                            <AntDesign name="check" size={20} />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+                {subtasks.map((subtask) => (
+                    <View key={subtask.id} style={styles.subtaskContainer}>
+                        <Text style={styles.subtaskItem}>{subtask.title}</Text>
+                        <View style={styles.actionButtonsContainer}>
+                            <TouchableOpacity onPress={() => deleteTask(subtask.id)} style={styles.deleteButton}>
+                                <AntDesign name="delete" size={18} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => editTask(subtask.id)} style={styles.editButton}>
+                                <AntDesign name="edit" size={18} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => completeTask(subtask.id)} style={styles.completeButton}>
+                                <AntDesign name="check" size={18} />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                ))}
+            </View>
+        );
+    };    
 
     const deleteTask = async (id) => {
         await addDoc(collection(db, "Activity (" + route.params.email + ")"), {
@@ -261,7 +289,7 @@ const HomeScreen = ({navigation, route}) => {
                     <TouchableOpacity onPress={goToTaskDetail} style={styles.creationButton}>
                         <Text style={styles.buttonText}>Create Task</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={goToActivity} style={styles.ActivityButton}>
+                    <TouchableOpacity onPress={goToActivity} style={styles.activityButton}>
                         <Text style={styles.buttonText}>Activity History</Text>
                     </TouchableOpacity>
                 </View>
@@ -307,7 +335,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#007BFF',
         marginRight: 80,
     },   
-    ActivityButton: {
+    activityButton: {
         borderRadius: 5,
         padding: 10,
         justifyContent: 'center',
@@ -325,40 +353,66 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold',
     },
+    itemContainer: {
+        marginBottom: 10,
+    },
+    taskContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        position: 'relative',
+    },
     item: {
         padding: 12,
         fontSize: 20,
-        marginTop: 5,
         fontWeight: 'bold',
         backgroundColor: '#BDDBF1',
-        width: 350,
+        width: '100%',
         borderColor: '#000',
         borderWidth: 2,
-        paddingRight: 80,
+        paddingRight: 10,
+    },
+    subtaskContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginLeft: 20, 
+    },
+    subtaskTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 5,
+    },
+    subtaskItem: {
+        padding: 12,
+        backgroundColor: '#BDDBF1',
+        width: '92%',
+        borderWidth: 1,
+        marginTop: 2,
+        marginLeft: 25,
+    },
+    actionButtonsContainer: {
+        flexDirection: 'row', 
+        position: 'absolute', 
+        top: 10,
+        right: 10,
     },
     deleteButton: {
         backgroundColor: '#DF0000',
         borderRadius: 10,
         padding: 6,
-        position: 'absolute',
-        top: 15,
-        right: 15,
+        marginRight: 5,
     },
     editButton: {
         backgroundColor: '#007BFF',
         borderRadius: 10,
         padding: 6,
-        position: 'absolute',
-        top: 15,
-        right: 50,
+        marginRight: 5,
     },
     completeButton: {
         backgroundColor: '#0F9D58',
         borderRadius: 10,
         padding: 6,
-        position: 'absolute',
-        top: 15,
-        right: 85,
     },
     listContainer: {
         marginBottom: 45,
