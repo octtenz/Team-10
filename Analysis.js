@@ -1,251 +1,234 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { FIREBASE_DB} from './firebase-config';
+import { FIREBASE_DB } from './firebase-config';
 
 const AnalysisScreen = ({ route }) => {
- const [data, setData] = useState({
-   currentPeriod: [],
-   lastPeriod: [],
-   mostProductiveTime: '',
-   categories: { remainingTasks: {}, completedTasks: {} }
- });
+  const [currentPeriodDayData, setCurrentPeriodDayData] = useState([]);
+  const [currentPeriodMonthData, setCurrentPeriodMonthData] = useState([]);
+  const [currentPeriodYearData, setCurrentPeriodYearData] = useState([]);
+  const [mostProductiveDay, setMostProductiveDay] = useState(null);
+  const [mostProductiveMonth, setMostProductiveMonth] = useState(null);
+  const [taskCategories, setTaskCategories] = useState([]);
 
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const currentYear = new Date().getFullYear();
-      const lastYear = currentYear - 1;
-
-      // Fetching current period data for the current year
-      const currentPeriodSnapshot = await db.collection("Activity (" + route.params.email + ")")
-        .where("Action", "==", "COMPLETE")
-        .where("Year", "==", currentYear)
-        .get();
-      const currentPeriodData = currentPeriodSnapshot.docs.map(doc => ({...doc.data(),
-        timestamp: doc.data().timestamp.toDate() 
-      }));
-
-      // Fetching last period data for the previous year
-      const lastPeriodSnapshot = await db.collection("Activity (" + route.params.email + ")")
-        .where("Action", "==", "COMPLETE")
-        .where("Year", "==", lastYear)
-        .get();
-      const lastPeriodData = lastPeriodSnapshot.docs.map(doc => ({...doc.data(),
-        timestamp: doc.data().timestamp.toDate() 
-      }));
-
-      // Fetching most productive time data for the current year
-      const mostProductiveTimeSnapshot = await db.collection("Activity (" + route.params.email + ")")
-        .where("Year", "==", currentYear)
-        .orderBy("Time", "desc")
-        .limit(1)
-        .get();
-      const mostProductiveTimeData = mostProductiveTimeSnapshot.docs[0]?.data() || {};
-      mostProductiveTimeData.timestamp = mostProductiveTimeData.timestamp.toDate(); 
-
-      // Fetching categories data
-      const tasksSnapshot = await db.collection("Task (" + route.params.email + ")").get();
-      let remainingTasks = {};
-      let completedTasks = {};
-      tasksSnapshot.forEach(doc => {
-        const { tag, status } = doc.data();
-        if (status === 'remaining') {
-          remainingTasks[tag] = (remainingTasks[tag] || 0) + 1;
-        } else if (status === 'completed') {
-          completedTasks[tag] = (completedTasks[tag] || 0) + 1;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth() + 1; // Month is zero-based, so add 1
+        const currentDay = today.getDate();
+  
+        const activityRef = FIREBASE_DB.collection("Activity (" + route.params.email + ")");
+  
+        // Fetching current period data for the current day
+        const currentDaySnapshot = await activityRef
+          .where("Action", "==", "COMPLETE")
+          .where("Time", ">=", new Date(currentYear, currentMonth - 1, currentDay))
+          .where("Time", "<", new Date(currentYear, currentMonth - 1, currentDay + 1))
+          .get();
+        const currentDayData = currentDaySnapshot.docs.map(doc => doc.data());
+        setCurrentPeriodDayData(currentDayData);
+  
+        // Fetching current period data for the current month
+        const currentMonthSnapshot = await activityRef
+          .where("Action", "==", "COMPLETE")
+          .where("Time", ">=", new Date(currentYear, currentMonth - 1, 1))
+          .where("Time", "<", new Date(currentYear, currentMonth, 1))
+          .get();
+        const currentMonthData = currentMonthSnapshot.docs.map(doc => doc.data());
+        setCurrentPeriodMonthData(currentMonthData);
+  
+        // Fetching current period data for the current year
+        const currentYearSnapshot = await activityRef
+          .where("Action", "==", "COMPLETE")
+          .where("Time", ">=", new Date(currentYear, 0, 1))
+          .where("Time", "<", new Date(currentYear + 1, 0, 1))
+          .get();
+        const currentYearData = currentYearSnapshot.docs.map(doc => doc.data());
+        setCurrentPeriodYearData(currentYearData);
+  
+        // Calculate most productive day in the current year
+        const daysCountMap = {};
+        const monthsCountMap = {};
+        currentYearData.forEach(task => {
+          const taskDate = new Date(task.Time.seconds * 1000).getDate();
+          const taskMonth = new Date(task.Time.seconds * 1000).getMonth() + 1;
+          if (taskMonth === currentMonth) {
+            daysCountMap[taskDate] = (daysCountMap[taskDate] || 0) + 1;
+          }
+          monthsCountMap[taskMonth] = (monthsCountMap[taskMonth] || 0) + 1;
+        });
+        const mostProductiveDay = Object.keys(daysCountMap).reduce((a, b) => daysCountMap[a] > daysCountMap[b] ? a : b);
+        setMostProductiveDay(`${currentMonth}/${mostProductiveDay}/${currentYear}`);
+        const mostProductiveMonth = Object.keys(monthsCountMap).reduce((a, b) => monthsCountMap[a] > monthsCountMap[b] ? a : b);
+        setMostProductiveMonth(convertMonthToString(mostProductiveMonth));
+  
+        // Fetch all tasks from the Task collection
+        const tasksSnapshot = await FIREBASE_DB.collection("Task (" + route.params.email + ")").get();
+        const tasksData = tasksSnapshot.docs.map(doc => doc.data());
+    
+        // Fetch all activities
+        const allActivitiesSnapshot = await activityRef.get();
+        const allActivitiesData = allActivitiesSnapshot.docs.map(doc => doc.data());
+    
+        // Filter out deleted tasks from activity list
+        const validActivities = allActivitiesData.filter(activity => activity.Action !== "DELETE");
+    
+        // Group tasks by tag
+        const taskTags = {};
+        tasksData.forEach(task => {
+          if (task.selectedTags && Array.isArray(task.selectedTags)) {
+            task.selectedTags.forEach(tag => {
+              if (tag.selected) {
+                if (!taskTags[tag.text]) {
+                  taskTags[tag.text] = [];
+                }
+                taskTags[tag.text].push(task);
+              }
+            });
+          }
+        });
+  
+        // Count completed and incomplete tasks for each tag
+        const categories = [];
+        for (const tag in taskTags) {
+          let completedCount = 0;
+          let incompleteCount = 0;
+          taskTags[tag].forEach(task => {
+            const completed = validActivities.some(activity => activity.TaskID === task.TaskID && activity.Action === "COMPLETE");
+            if (completed) {
+              completedCount++;
+            } else {
+              incompleteCount++;
+            }
+          });
+          categories.push({ tag, completedCount, incompleteCount });
         }
-      });
-
-      // Updating state with fetched data
-      setData({
-        currentPeriod: currentPeriodData,
-        lastPeriod: lastPeriodData,
-        mostProductiveTime: mostProductiveTimeData,
-        categories: { remainingTasks, completedTasks }
-      });
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    }
+        setTaskCategories(categories);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+    fetchData();
+  }, [route.params.email]);  
+  
+  // Function to convert month number to string
+  const convertMonthToString = (month) => {
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return months[month - 1]; // Adjusting month index to start from 0
   };
 
-  fetchData();
-}, [route.params.email]);
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Analysis</Text>
 
- return (
-   <View style={styles.container}>
-     <Text style={[styles.title, { color: '#1e90ff' }]}>Analysis</Text>
-  
-     <Text style={[styles.heading, { color: 'black' }]}>You Completed:</Text>
-     <View style={[styles.section, styles.lightBlueBackground]}>
-       <View style={styles.table}>
-         <View style={styles.tableRow}>
-           <Text style={[styles.tableHeader, styles.center]}> </Text>
-           <Text style={[styles.tableHeader, styles.center]}>Day</Text>
-           <Text style={[styles.tableHeader, styles.center]}>Month</Text>
-           <Text style={[styles.tableHeader, styles.center]}>Year</Text>
-         </View>
-         <View style={styles.tableRow}>
-           <Text style={[styles.tableHeader, styles.center]}>This Period</Text>
-           {data.currentPeriod.map((item, index) => (
-             <View key={index} style={styles.tableCell}>
-               <Text style={styles.center}>{item.day}</Text>
-             </View>
-           ))}
-           {data.currentPeriod.map((item, index) => (
-             <View key={index} style={styles.tableCell}>
-               <Text style={styles.center}>{item.month}</Text>
-             </View>
-           ))}
-           {data.currentPeriod.map((item, index) => (
-             <View key={index} style={styles.tableCell}>
-               <Text style={styles.center}>{item.year}</Text>
-             </View>
-           ))}
-         </View>
-         <View style={styles.tableRow}>
-           <Text style={[styles.tableHeader, styles.center]}>Last Period</Text>
-           {data.lastPeriod.map((item, index) => (
-             <View key={index} style={styles.tableCell}>
-               <Text style={styles.center}>{item.day}</Text>
-             </View>
-           ))}
-           {data.lastPeriod.map((item, index) => (
-             <View key={index} style={styles.tableCell}>
-               <Text style={styles.center}>{item.month}</Text>
-             </View>
-           ))}
-           {data.lastPeriod.map((item, index) => (
-             <View key={index} style={styles.tableCell}>
-               <Text style={styles.center}>{item.year}</Text>
-             </View>
-           ))}
-         </View>
-       </View>
-     </View>
+      <View style={styles.tableContainer}>
+        <Text style={styles.tableTitle}>Completed Tasks</Text>
+        <View style={styles.table}>
+          <View style={styles.tableRow}>
+            <Text style={[styles.tableHeader, styles.center]}>Daily</Text>
+            <Text style={[styles.tableHeader, styles.center]}>Monthly</Text>
+            <Text style={[styles.tableHeader, styles.center]}>Yearly</Text>
+          </View>
+          <View style={styles.tableRow}>
+            <Text style={[styles.tableCell, styles.center]}>{currentPeriodDayData.length}</Text>
+            <Text style={[styles.tableCell, styles.center]}>{currentPeriodMonthData.length}</Text>
+            <Text style={[styles.tableCell, styles.center]}>{currentPeriodYearData.length}</Text>
+          </View>
+        </View>
+      </View>
 
+      <View style={styles.tableContainer}>
+        <Text style={styles.tableTitle}>Most Productive Time</Text>
+        <View style={styles.table}>
+          <View style={styles.tableRow}>
+            <Text style={[styles.tableHeader, styles.center]}>In Current Month</Text>
+            <Text style={[styles.tableHeader, styles.center]}>In Current Year</Text>
+          </View>
+          <View style={styles.tableRow}>
+            <Text style={[styles.tableCell, styles.center]}>{mostProductiveDay}</Text>
+            <Text style={[styles.tableCell, styles.center]}>{mostProductiveMonth}</Text>
+          </View>
+        </View>
+      </View>
 
-     <Text style={[styles.heading, { color: 'black' }]}>Most Productive Time:</Text>
-     <View style={[styles.section, styles.lightBlueBackground]}>
-       <Text style={styles.center}>{data.mostProductiveTime.day} - {data.mostProductiveTime.timePeriod}</Text>
-     </View>
-
-
-     <Text style={[styles.heading, { color: 'black' }]}>Categories:</Text>
-     <View style={[styles.section, styles.lightBlueBackground]}>
-       <View style={styles.table}>
-         <View style={styles.tableRow}>
-           <Text style={[styles.tableHeader, styles.left]}>Tags</Text>
-           <Text style={[styles.tableHeader, styles.left]}>Number Left</Text>
-         </View>
-         {Object.keys(data.categories.remainingTasks).map((key) => (
-           <View style={styles.tableRow} key={key}>
-             <Text style={[styles.tableCell, styles.left]}>Remaining Tasks</Text>
-             <View style={[styles.tableCell, styles.left]}>
-               {key === 'Math' || key === 'Science' ? (
-                 <View style={styles.circle}>
-                   <Text style={[styles.center, { color: 'white' }]}>{key}</Text>
-                 </View>
-               ) : (
-                 <Text style={styles.center}>{key}</Text>
-               )}
-             </View>
-             <Text style={[styles.tableCell, styles.left]}>{data.categories.remainingTasks[key]}</Text>
-           </View>
-         ))}
-         <View style={styles.tableRow}>
-           <Text style={[styles.tableHeader, styles.left]}>Tags</Text>
-           <Text style={[styles.tableHeader, styles.left]}>Number Done</Text>
-         </View>
-         {Object.keys(data.categories.completedTasks).map((key) => (
-           <View style={styles.tableRow} key={key}>
-             <Text style={[styles.tableCell, styles.left]}>Completed Tasks</Text>
-             <View style={[styles.tableCell, styles.left]}>
-               {key === 'Math' || key === 'Science' ? (
-                 <View style={styles.circle}>
-                   <Text style={[styles.center, { color: 'white' }]}>{key}</Text>
-                 </View>
-               ) : (
-                 <Text style={styles.center}>{key}</Text>
-               )}
-             </View>
-             <Text style={[styles.tableCell, styles.left]}>{data.categories.completedTasks[key]}</Text>
-           </View>
-         ))}
-       </View>
-     </View>
-   </View>
- );
+      <View style={styles.tableContainer}>
+        <Text style={styles.tableTitle}>Task Categories</Text>
+        <View style={styles.table}>
+          <View style={styles.tableRow}>
+            <Text style={[styles.tableHeader, styles.center]}>Tag</Text>
+            <Text style={[styles.tableHeader, styles.center]}>Completed</Text>
+            <Text style={[styles.tableHeader, styles.center]}>Incomplete</Text>
+          </View>
+          {taskCategories.map((category, index) => (
+          <View style={styles.tableRow} key={index}>
+            <Text style={[styles.tableCell, styles.center]}>{category.tag}</Text>
+            <Text style={[styles.tableCell, styles.center]}>{category.completedCount}</Text>
+            <Text style={[styles.tableCell, styles.center]}>{category.incompleteCount}</Text>
+          </View>
+        ))}
+        </View>
+      </View>
+    </View>
+  );
 };
 
-
 const styles = StyleSheet.create({
-container: {
-   flex: 1,
-   padding: 20,
-   alignItems: 'center',
-   backgroundColor: 'white'
- },
- title: {
-   fontSize: 24,
-   fontWeight: 'bold',
-   marginBottom: 20,
-   padding: 10,
-   width: '100%',
-   textAlign: 'center'
- },
- section: {
-   borderWidth: 1,
-   borderColor: 'black',
-   marginBottom: 20,
-   width: '100%'
- },
- lightBlueBackground: {
-   backgroundColor: '#e0f0ff'
- },
- heading: {
-   fontSize: 20,
-   fontWeight: 'bold',
-   marginBottom: 10
- },
- table: {
-   flexDirection: 'column',
-   marginBottom: 20,
-   width: '100%'
- },
- tableRow: {
-   flexDirection: 'row',
-   justifyContent: 'space-between',
-   paddingVertical: 4,
-   borderBottomWidth: 1,
-   borderBottomColor: 'black'
- },
- tableHeader: {
-   flex: 1,
-   textAlign: 'right',
-   fontWeight: 'bold'
- },
- tableCell: {
-   flex: 1,
-   textAlign: 'center',
-   borderEndWidth: 1,
-   borderRightColor: 'black'
- },
- center: {
-   justifyContent: 'center',
-   alignItems: 'center'
- },
- left: {
-   justifyContent: 'flex-start',
-   alignItems: 'flex-start'
- },
- circle: {
-   width: 'auto',
-   backgroundColor: '#66ccff',
-   paddingHorizontal: 10,
-   paddingVertical: 5,
-   borderRadius: 100
- }
+  container: {
+    flex: 1,
+    padding: 20,
+    alignItems: 'center',
+    backgroundColor: 'white',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    padding: 10,
+    width: '100%',
+    textAlign: 'center',
+    color: '#1e90ff',
+  },
+  tableContainer: {
+    marginBottom: 20,
+    width: '100%',
+  },
+  tableTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center', // Center the title text
+    color: 'black',
+  },
+  table: {
+    borderWidth: 1,
+    borderColor: 'black',
+    width: '100%',
+    marginBottom: 30,
+    backgroundColor: '#e0f0ff'
+  },
+  tableRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'black',
+  },
+  tableHeader: {
+    flex: 1,
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  tableCell: {
+    flex: 1,
+    textAlign: 'center',
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
-
 
 export default AnalysisScreen;
