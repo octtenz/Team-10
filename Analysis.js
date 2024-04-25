@@ -10,7 +10,7 @@ const AnalysisScreen = ({ route }) => {
    categories: { remainingTasks: {}, completedTasks: {} }
  });
 
- useEffect(() => {
+useEffect(() => {
   const fetchData = async () => {
     try {
       const currentYear = new Date().getFullYear();
@@ -21,14 +21,18 @@ const AnalysisScreen = ({ route }) => {
         .where("Action", "==", "COMPLETE")
         .where("Year", "==", currentYear)
         .get();
-      const currentPeriodData = currentPeriodSnapshot.docs.map(doc => doc.data());
+      const currentPeriodData = currentPeriodSnapshot.docs.map(doc => ({...doc.data(),
+        timestamp: doc.data().timestamp.toDate() 
+      }));
 
       // Fetching last period data for the previous year
       const lastPeriodSnapshot = await db.collection("Activity (" + route.params.email + ")")
         .where("Action", "==", "COMPLETE")
         .where("Year", "==", lastYear)
         .get();
-      const lastPeriodData = lastPeriodSnapshot.docs.map(doc => doc.data());
+      const lastPeriodData = lastPeriodSnapshot.docs.map(doc => ({...doc.data(),
+        timestamp: doc.data().timestamp.toDate() 
+      }));
 
       // Fetching most productive time data for the current year
       const mostProductiveTimeSnapshot = await db.collection("Activity (" + route.params.email + ")")
@@ -37,6 +41,7 @@ const AnalysisScreen = ({ route }) => {
         .limit(1)
         .get();
       const mostProductiveTimeData = mostProductiveTimeSnapshot.docs[0]?.data() || {};
+      mostProductiveTimeData.timestamp = mostProductiveTimeData.timestamp.toDate(); 
 
       // Fetching categories data
       const tasksSnapshot = await db.collection("Task (" + route.params.email + ")").get();
