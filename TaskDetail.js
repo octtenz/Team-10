@@ -162,7 +162,6 @@ const TaskDetailScreen = ({ navigation, route }) => {
         // Get the parent task object
         const parentTaskObj = tasks.find(task => task.title === parentTask);
         if (parentTaskObj) {
-          // Add task A as a subtask of the parent task
           const parentTaskId = parentTaskObj.id;
           await updateDoc(doc(FIREBASE_DB, "Task (" + route.params.email + ")", parentTaskId), {
             subtasks: [...parentTaskObj.subtasks, docRef.id], // Assuming subtasks is an array field in the database
@@ -364,7 +363,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
     alignItems: 'flex-start',
-    marginTop: 10,
+    backgroundColor: 'white',
   },
   title: {
     fontSize: 24,

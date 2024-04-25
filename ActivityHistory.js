@@ -93,6 +93,7 @@ const styles = StyleSheet.create({
         paddingTop: 40,
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: 'white',
     },
     title: {
         fontSize: 24,

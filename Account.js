@@ -331,7 +331,7 @@ const SettingScreen = ({ navigation, route}) => {
                     color='#000000'
                 />
             </View>
-            
+
             <View style={[styles.buttonView, {width:280, marginTop:50}]}>
                  <Button
                      onPress={handleSignOut}
@@ -348,10 +348,11 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: 'white',
     },
     logoImage: {
-        height: 180,
-        resizeMode: 'contain',
+        width: 500,
+        height: 100,
         marginTop: 10,
         marginBottom: 40,
     },
