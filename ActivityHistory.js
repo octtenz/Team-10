@@ -1,52 +1,31 @@
 import React, {useCallback, useEffect, useState} from "react";
-import {View, StyleSheet, Text, SafeAreaView, FlatList, RefreshControl, TouchableOpacity} from "react-native";
+import {FlatList, RefreshControl, SafeAreaView, StyleSheet, Text, View} from "react-native";
 import {FIREBASE_DB as db} from "./firebase-config";
-import AntDesign from '@expo/vector-icons/AntDesign';
 
 const ActivityHistoryScreen = ({navigation, route}) => {
-    // TODO add delete button to history.
 
     let [activities, setActivities] = useState([]);
 
-    let [taskNames, setTaskNames] = useState([]);
+    let [, setTaskNames] = useState([]);
 
     let [taskTitleMap, setTaskTitleMap] = useState({});
 
-    const deleteActivity = ({id}) => {
-        navigation.navigate('Home', route.params);
-    }
-
     const [refreshing, setRefreshing] = React.useState(false);
 
-    const onRefresh = React.useCallback(() => {
-        setRefreshing(true);
-        fetchActivity();
-        setTimeout(() => {
-            setRefreshing(false);
-        }, 2000);
-    }, []);
-
-    useEffect(() => {
-        const unsubscribe = navigation.addListener('focus', () => {
-            fetchActivity();
-        });
-        return unsubscribe;
-    }, [navigation, fetchActivity]);    
-
-    const fetchActivity = useCallback( async () => {
+    const fetchActivity = useCallback(async () => {
         console.log("Fetching activities...");
 
         const retrieveData = db.collection("Activity (" + route.params.email + ")");
         const querySnapshot = await retrieveData.get();
         let activities = querySnapshot.docs.map((doc) => {
-            return { id: doc.id, ...doc.data() };
+            return {id: doc.id, ...doc.data()};
         });
         setActivities(activities);
         const taskTitleQuery = db.collection("Task (" + route.params.email + ")");
         taskTitleQuery.get().then((querySnapshot) => {
             let taskNames = querySnapshot.docs.map((doc) => {
                 return {id: doc.id, title: doc.data().title}
-            });          
+            });
             setTaskNames(taskNames);
             let taskTitleMap = {};
             taskNames.forEach(doc => {
@@ -54,18 +33,35 @@ const ActivityHistoryScreen = ({navigation, route}) => {
             });
             setTaskTitleMap(taskTitleMap);
         });
+        setRefreshing(false);
+    }, [route.params.email, setRefreshing]);
+
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        fetchActivity();
+        setTimeout(() => {
             setRefreshing(false);
-    }, []);
+        }, 2000);
+    }, [setRefreshing, fetchActivity]);
+
+    useEffect(() => {
+        return navigation.addListener('focus', () => {
+            fetchActivity();
+        });
+    }, [navigation, fetchActivity]);
+
+    const renderDate = (date) => {
+        if (date == null) {
+            return "";
+        } else {
+            let formatted = new Date(date.seconds * 1000 + date.nanoseconds / 1000000)
+            return " - " + formatted.toDateString() + " " + formatted.toLocaleTimeString();
+        }
+    };
 
     const renderItem = ({item}) => (
         <View>
-            <Text style={styles.item}>{item.Action + " " + taskTitleMap[item.TaskID]}</Text>
-            <TouchableOpacity onPress={deleteActivity} style={styles.deleteButton}>
-                <AntDesign
-                    name="delete"
-                    size={20}
-                />
-            </TouchableOpacity>
+            <Text style={styles.item}>{item.Action + " " + taskTitleMap[item.TaskID] + renderDate(item.Time)}</Text>
         </View>
     );
 
