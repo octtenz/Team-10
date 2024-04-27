@@ -1,18 +1,15 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, RefreshControl} from 'react-native';
+import {FlatList, RefreshControl, SafeAreaView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {FontAwesome} from '@expo/vector-icons';
 import {FIREBASE_DB as db} from "./firebase-config";
-// import Checkbox from 'expo-checkbox';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import {serverTimestamp, addDoc, collection} from "firebase/firestore";
+import {addDoc, collection, serverTimestamp} from "firebase/firestore";
 import {Dropdown} from "react-native-element-dropdown";
-
-//TODO add checkbox, fix empty list bugging out buttons
 
 const HomeScreen = ({navigation, route}) => {
 
     const goToTaskDetail = () => {
-        route.params.currentTaskID = null ;
+        route.params.currentTaskID = null;
         navigation.navigate('Task Detail', route.params);
     };
 
@@ -26,36 +23,20 @@ const HomeScreen = ({navigation, route}) => {
 
     const [refreshing, setRefreshing] = React.useState(false);
 
-    const onRefresh = React.useCallback(() => {
-        setRefreshing(true);
-        fetchTasks();
-        setTimeout(() => {
-            setRefreshing(false);
-        }, 2000);
-    }, []);
-
     let [tasks, setTasks] = useState([]);
-
-    let [deleteList, setDeleteList] = useState([]);
 
     const [additionalTags, setAdditionalTags] = React.useState([]);
 
     const [tags, setTags] = useState([
-        { label: 'Work', value: '1' },
-        { label: 'School', value: '2' },
-        { label: 'High Priority', value: '3' },
-        { label: 'Low Priority', value: '4' },
-        { label: 'Personal', value: '5' }
+
+        {label: 'Work', value: '1'},
+        {label: 'School', value: '2'},
+        {label: 'High Priority', value: '3'},
+        {label: 'Low Priority', value: '4'},
+        {label: 'Personal', value: '5'},
+        {label: 'Due Date', value: '6'},
+
     ]);
-
-    const [selectedTag, setSelectedTag] = useState(null);
-
-    useEffect(() => {
-        const unsubscribe = navigation.addListener('focus', () => {
-            fetchTasks();
-        });
-        return unsubscribe;
-    }, [navigation, fetchTasks]);    
 
     const fetchTasks = useCallback(async () => {
 
@@ -65,40 +46,55 @@ const HomeScreen = ({navigation, route}) => {
         const querySnapshot = await retrieveData.get();
 
         let tasks = querySnapshot.docs.map((doc) => {
-            return { id: doc.id, ...doc.data(), subtasks: [] };
+            return {id: doc.id, ...doc.data(), subtasks: []};
         });
 
         await Promise.all(tasks.map(async task => {
             const subtaskSnapshot = await db.collection("Subtask (" + route.params.email + ")")
                 .where("parentTaskID", "==", task.id)
                 .get();
-    
+
             task.subtasks = subtaskSnapshot.docs.map((doc) => {
-                return { id: doc.id, ...doc.data() };
+                return {id: doc.id, ...doc.data()};
             });
         }));
 
-            const checkDelete = db.collection("Activity (" + route.params.email + ")")
-                .where("Action", "in", ["DELETE", "COMPLETE"]);
+        const checkDelete = db.collection("Activity (" + route.params.email + ")")
+            .where("Action", "in", ["DELETE", "COMPLETE"]);
 
-            const deleteQuerySnapshot = await checkDelete.get();
-            const deleteList = deleteQuerySnapshot.docs.map((doc) => {
-                return doc.data().TaskID;
-            });
+        const deleteQuerySnapshot = await checkDelete.get();
 
-            tasks = tasks.filter(tasks => !deleteList.includes(tasks.id));
+        const deleteList = deleteQuerySnapshot.docs.map((doc) => {
+            return doc.data().TaskID;
+        });
 
-            setTasks(tasks);
+        tasks = tasks.filter(tasks => !deleteList.includes(tasks.id));
 
-            tasks.map(tasks => tasks.selectedTags).forEach(item => item.forEach(item =>
-                additionalTags.includes(item.text) ? {} : additionalTags.push(item.text)
-            ));
+        setTasks(tasks);
 
-            setAdditionalTags(additionalTags);
-            addAdditionalTagsToTags();
+        tasks.map(tasks => tasks.selectedTags).forEach(item => item.forEach(item =>
+            additionalTags.includes(item.text) ? {} : additionalTags.push(item.text)
+        ));
 
+        setAdditionalTags(additionalTags);
+        addAdditionalTagsToTags();
+
+        setRefreshing(false);
+    }, [route.params.email, additionalTags, setAdditionalTags, setRefreshing]);
+
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        fetchTasks();
+        setTimeout(() => {
             setRefreshing(false);
-    }, []);
+        }, 2000);
+    }, [setRefreshing, fetchTasks]);
+
+    useEffect(() => {
+        return navigation.addListener('focus', () => {
+            fetchTasks();
+        });
+    }, [navigation, fetchTasks]);
 
     const addAdditionalTagsToTags = () => {
 
@@ -110,33 +106,33 @@ const HomeScreen = ({navigation, route}) => {
             if (!tagExists) {
 
                 const newValue = updatedTags.length + 1;
-                const newTag = { label: tag, value: newValue.toString() };
+                const newTag = {label: tag, value: newValue.toString()};
                 updatedTags.push(newTag);
             }
         });
         setTags(updatedTags);
     };
 
-    const renderItem = ({ item }) => {
+    const renderItem = ({item}) => {
         if (item.parentTask !== '') {
             return null;
         }
-    
+
         const subtasks = tasks.filter((task) => task.parentTask === item.title);
-    
+
         return (
             <View style={styles.itemContainer}>
                 <View style={styles.taskContainer}>
                     <Text style={styles.item}>{item.title}</Text>
                     <View style={styles.actionButtonsContainer}>
                         <TouchableOpacity onPress={() => deleteTask(item.id)} style={styles.deleteButton}>
-                            <AntDesign name="delete" size={20} />
+                            <AntDesign name="delete" size={20}/>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => editTask(item.id)} style={styles.editButton}>
-                            <AntDesign name="edit" size={20} />
+                            <AntDesign name="edit" size={20}/>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => completeTask(item.id)} style={styles.completeButton}>
-                            <AntDesign name="check" size={20} />
+                            <AntDesign name="check" size={20}/>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -145,20 +141,20 @@ const HomeScreen = ({navigation, route}) => {
                         <Text style={styles.subtaskItem}>{subtask.title}</Text>
                         <View style={styles.actionButtonsContainer}>
                             <TouchableOpacity onPress={() => deleteTask(subtask.id)} style={styles.deleteButton}>
-                                <AntDesign name="delete" size={18} />
+                                <AntDesign name="delete" size={18}/>
                             </TouchableOpacity>
                             <TouchableOpacity onPress={() => editTask(subtask.id)} style={styles.editButton}>
-                                <AntDesign name="edit" size={18} />
+                                <AntDesign name="edit" size={18}/>
                             </TouchableOpacity>
                             <TouchableOpacity onPress={() => completeTask(subtask.id)} style={styles.completeButton}>
-                                <AntDesign name="check" size={18} />
+                                <AntDesign name="check" size={18}/>
                             </TouchableOpacity>
                         </View>
                     </View>
                 ))}
             </View>
         );
-    };    
+    };
 
     const deleteTask = async (id) => {
         await addDoc(collection(db, "Activity (" + route.params.email + ")"), {
@@ -170,8 +166,8 @@ const HomeScreen = ({navigation, route}) => {
     }
 
     const editTask = (id) => {
-        route.params.tasks = tasks ;
-        route.params.currentTaskID = id ;
+        route.params.tasks = tasks;
+        route.params.currentTaskID = id;
         let tags = [];
         tasks.map(tasks => tasks.selectedTags).forEach(item => item.forEach(item =>
             tags.includes(item.text) ? {} : tags.push(item.text)
@@ -193,25 +189,53 @@ const HomeScreen = ({navigation, route}) => {
     const sortTasksByTag = (selectedTag) => {
         const sortedTasks = [...tasks];
 
-        sortedTasks.sort((a, b) => {
-            const aHasTag = a.selectedTags.some(tag => tag.text === selectedTag);
-            const bHasTag = b.selectedTags.some(tag => tag.text === selectedTag);
+        if (selectedTag === 'Due Date') {
 
-            if ((aHasTag && bHasTag) || (!aHasTag && !bHasTag)) {
+            sortedTasks.sort((task1, task2) => {
+
+                const year1 = parseInt(task1.dueDateYear, 10);
+                const month1 = parseInt(task1.dueDateMonth, 10);
+                const day1 = parseInt(task1.dueDateDay, 10);
+
+                const year2 = parseInt(task2.dueDateYear, 10);
+                const month2 = parseInt(task2.dueDateMonth, 10);
+                const day2 = parseInt(task2.dueDateDay, 10);
+
+                const date1 = new Date(year1, month1 - 1, day1);
+                const date2 = new Date(year2, month2 - 1, day2);
+
+                if (date1 < date2) {
+                    return -1;
+                } else if (date1 > date2) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            });
+
+        } else {
+
+            sortedTasks.sort((a, b) => {
+
+                const aHasTag = a.selectedTags.some(tag => tag.text === selectedTag);
+                const bHasTag = b.selectedTags.some(tag => tag.text === selectedTag);
+
+                if ((aHasTag && bHasTag) || (!aHasTag && !bHasTag)) {
+                    return 0;
+                }
+
+                if (aHasTag) {
+                    return -1;
+                }
+
+                if (bHasTag) {
+                    return 1;
+                }
+
                 return 0;
-            }
+            });
+        }
 
-            if (aHasTag) {
-                return -1;
-            }
-
-            if (bHasTag) {
-                return 1;
-            }
-
-            return 0;
-        });
-        
         setTasks(sortedTasks);
     };
 
@@ -253,9 +277,9 @@ const HomeScreen = ({navigation, route}) => {
                         onFocus={() => setIsFocus(true)}
                         onBlur={() => setIsFocus(false)}
                         onChange={item => {
+
                             setValue(item.value);
                             setIsFocus(false);
-                            setSelectedTag(item.label);
                             sortTasksByTag(item.label);
                         }}
                         renderLeftIcon={() => (
@@ -337,7 +361,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#007BFF',
         marginRight: 80,
-    },   
+    },
     activityButton: {
         borderRadius: 5,
         padding: 10,
@@ -379,7 +403,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginLeft: 20, 
+        marginLeft: 20,
     },
     subtaskTitle: {
         fontSize: 18,
@@ -395,8 +419,8 @@ const styles = StyleSheet.create({
         marginLeft: 25,
     },
     actionButtonsContainer: {
-        flexDirection: 'row', 
-        position: 'absolute', 
+        flexDirection: 'row',
+        position: 'absolute',
         top: 10,
         right: 10,
     },
