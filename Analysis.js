@@ -8,6 +8,7 @@ const AnalysisScreen = ({ route }) => {
   const [currentPeriodYearData, setCurrentPeriodYearData] = useState([]);
   const [mostProductiveDay, setMostProductiveDay] = useState(null);
   const [mostProductiveMonth, setMostProductiveMonth] = useState(null);
+  const [mostProductiveTimeOfDay, setMostProductiveTimeOfDay] = useState(null); // New state variable
   const [taskCategories, setTaskCategories] = useState([]);
 
   useEffect(() => {
@@ -28,6 +29,15 @@ const AnalysisScreen = ({ route }) => {
           .get();
         const currentDayData = currentDaySnapshot.docs.map(doc => doc.data());
         setCurrentPeriodDayData(currentDayData);
+  
+        // Calculate most productive time of the day
+        const hoursCountMap = {};
+        currentDayData.forEach(task => {
+          const taskHour = new Date(task.Time.seconds * 1000).getHours();
+          hoursCountMap[taskHour] = (hoursCountMap[taskHour] || 0) + 1;
+        });
+        const mostProductiveHour = Object.keys(hoursCountMap).reduce((a, b) => hoursCountMap[a] > hoursCountMap[b] ? a : b);
+        setMostProductiveTimeOfDay(`${mostProductiveHour}:00`);
   
         // Fetching current period data for the current month
         const currentMonthSnapshot = await activityRef
@@ -144,10 +154,12 @@ const AnalysisScreen = ({ route }) => {
         <Text style={styles.tableTitle}>Most Productive Time</Text>
         <View style={styles.table}>
           <View style={styles.tableRow}>
+            <Text style={[styles.tableHeader, styles.center]}>In Current Day</Text>
             <Text style={[styles.tableHeader, styles.center]}>In Current Month</Text>
             <Text style={[styles.tableHeader, styles.center]}>In Current Year</Text>
           </View>
           <View style={styles.tableRow}>
+            <Text style={[styles.tableCell, styles.center]}>{mostProductiveTimeOfDay}</Text>
             <Text style={[styles.tableCell, styles.center]}>{mostProductiveDay}</Text>
             <Text style={[styles.tableCell, styles.center]}>{mostProductiveMonth}</Text>
           </View>
