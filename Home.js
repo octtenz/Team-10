@@ -6,29 +6,57 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import {addDoc, collection, serverTimestamp} from "firebase/firestore";
 import {Dropdown} from "react-native-element-dropdown";
 
+/**
+ * Our Home screen for our app.
+ * @param navigation
+ * @param route allows us to carry information across screens.
+ * @returns {JSX.Element}
+ * @constructor
+ */
 const HomeScreen = ({navigation, route}) => {
 
+    /**
+     * Goes to create task screen. Note: functionality is shared with the edit task screen as well.
+     */
     const goToTaskDetail = () => {
         route.params.currentTaskID = null;
         navigation.navigate('Task Detail', route.params);
     };
-
+    /**
+     * Goes to settings screen
+     */
     const goToSettings = () => {
         navigation.navigate('Settings', route.params);
     };
-
+    /**
+     * Goes to activity screen
+     */
     const goToActivity = () => {
         navigation.navigate('Activity History', route.params);
     }
-
+    /**
+     * if refreshing is true, that means the page is currently refreshing.
+     * @type {boolean} refresh state
+     */
     const [refreshing, setRefreshing] = React.useState(false);
-
+    /**
+     * The list of tasks pulled from the firebase server.
+     * @type {tasks} our task list
+     */
     let [tasks, setTasks] = useState([]);
-
+    /**
+     * The list of custom tags the user made, pulled from the firebase server.
+     * @type {Array<String>} our custom tags
+     */
     const [additionalTags, setAdditionalTags] = React.useState([]);
-
+    /**
+     * The original tags provided with the app, potentially with a users custom-made tags.
+     * Value is only used for the
+     * sort by function.
+     * @type {{label: String, value: String}[]} our additional tags
+     */
     const [tags, setTags] = useState([
-
+        // Our default list of tags we provide to sort by
         {label: 'Work', value: '1'},
         {label: 'School', value: '2'},
         {label: 'High Priority', value: '3'},
@@ -37,18 +65,23 @@ const HomeScreen = ({navigation, route}) => {
         {label: 'Due Date', value: '6'},
 
     ]);
-
+    /**
+     * Fetches tasks from the database on refresh, on edit task, delete task, or add task.
+     * Also fetches the deleted/
+     * completed tasks, and cross compares to them as to not be displayed, and the additional tags.
+     * @type {(function(): Promise<void>)|*}
+     */
     const fetchTasks = useCallback(async () => {
 
         console.log("Fetching... (using a read)");
-
+        // Finds all tasks under a person's email, and its subtasks
         const retrieveData = db.collection("Task (" + route.params.email + ")");
         const querySnapshot = await retrieveData.get();
 
         let tasks = querySnapshot.docs.map((doc) => {
             return {id: doc.id, ...doc.data(), subtasks: []};
         });
-
+        //Ensures subtasks are with its correct parent task
         await Promise.all(tasks.map(async task => {
             const subtaskSnapshot = await db.collection("Subtask (" + route.params.email + ")")
                 .where("parentTaskID", "==", task.id)
@@ -58,7 +91,7 @@ const HomeScreen = ({navigation, route}) => {
                 return {id: doc.id, ...doc.data()};
             });
         }));
-
+        // Retrieves all completed and deleted tasks to be not displayed on the task list
         const checkDelete = db.collection("Activity (" + route.params.email + ")")
             .where("Action", "in", ["DELETE", "COMPLETE"]);
 
@@ -67,21 +100,27 @@ const HomeScreen = ({navigation, route}) => {
         const deleteList = deleteQuerySnapshot.docs.map((doc) => {
             return doc.data().TaskID;
         });
-
+        // Deletes completed and deleted tasks
         tasks = tasks.filter(tasks => !deleteList.includes(tasks.id));
 
         setTasks(tasks);
-
+        // Finds any custom tags made by the user on the firebase, and adds it to the tag list here
         tasks.map(tasks => tasks.selectedTags).forEach(item => item.forEach(item =>
             additionalTags.includes(item.text) ? {} : additionalTags.push(item.text)
         ));
 
         setAdditionalTags(additionalTags);
+        // helper function to actually add the additional tags to our tags since they are typed differently
         addAdditionalTagsToTags();
 
-        setRefreshing(false);
+
+        setRefreshing(false); // Refreshing is considered done once the above 3 tasks are completed
     }, [route.params.email, additionalTags, setAdditionalTags, setRefreshing]);
 
+    /**
+     * Enables refreshing function on the task list. Runs the fetchTasks sequence again if desired by the user.
+     * @type {(function(): void)|*}
+     */
     const onRefresh = React.useCallback(() => {
         setRefreshing(true);
         fetchTasks();
@@ -95,29 +134,38 @@ const HomeScreen = ({navigation, route}) => {
             fetchTasks();
         });
     }, [navigation, fetchTasks]);
-
+    /**
+     * Adds the additional tags to the tags list.
+     * Additional tags are just a string, and tags are a label and value, so
+     * this function helps turn it in to a tag list that can be used to sort our tasks.
+     */
     const addAdditionalTagsToTags = () => {
 
-        let updatedTags = [...tags];
-
+        let updatedTags = [...tags]; // Sets aside tags in a separate list as a safety measure
+        // Checks each additional tag
         additionalTags.forEach(tag => {
             const tagExists = updatedTags.some(existingTag => existingTag.label === tag);
-
+            // Makes sure it doesn't already exist in the tag list
             if (!tagExists) {
-
+                // Adds tag with the value being the next number of the list. The number is arbitrary for displaying.
                 const newValue = updatedTags.length + 1;
                 const newTag = {label: tag, value: newValue.toString()};
                 updatedTags.push(newTag);
             }
         });
-        setTags(updatedTags);
+        setTags(updatedTags); // Updates the tag with our changes
     };
-
+    /**
+     * Using a FlatList, we display each task and its subtask
+     * @param item each item is a task from the list of tasks to be displayed.
+     * @returns {JSX.Element|task} a list element of the FlatList representing each task.
+     */
     const renderItem = ({item}) => {
+        // Makes sure we don't display "orphan" tasks
         if (item.parentTask !== '') {
             return null;
         }
-
+        // Looks for any subtasks in our task list.
         const subtasks = tasks.filter((task) => task.parentTask === item.title);
 
         return (
@@ -125,17 +173,21 @@ const HomeScreen = ({navigation, route}) => {
                 <View style={styles.taskContainer}>
                     <Text style={styles.item}>{item.title}</Text>
                     <View style={styles.actionButtonsContainer}>
+                        {/*Delete button for a task*/}
                         <TouchableOpacity onPress={() => deleteTask(item.id)} style={styles.deleteButton}>
                             <AntDesign name="delete" size={20}/>
                         </TouchableOpacity>
+                        {/*Edit button for a task*/}
                         <TouchableOpacity onPress={() => editTask(item.id)} style={styles.editButton}>
                             <AntDesign name="edit" size={20}/>
                         </TouchableOpacity>
+                        {/*Complete button for a task*/}
                         <TouchableOpacity onPress={() => completeTask(item.id)} style={styles.completeButton}>
                             <AntDesign name="check" size={20}/>
                         </TouchableOpacity>
                     </View>
                 </View>
+                {/*We display our subtasks here*/}
                 {subtasks.map((subtask) => (
                     <View key={subtask.id} style={styles.subtaskContainer}>
                         <Text style={styles.subtaskItem}>{subtask.title}</Text>
@@ -156,70 +208,115 @@ const HomeScreen = ({navigation, route}) => {
         );
     };
 
+    /**
+     * Deletes a task off our task list.
+     * In reality, it is kept for tracking so that the user can see it in their
+     * analysis report.
+     * @param id unique ID of our task in the database.
+     * @returns {Promise<void>}
+     */
     const deleteTask = async (id) => {
         await addDoc(collection(db, "Activity (" + route.params.email + ")"), {
             Action: "DELETE",
             TaskID: id,
             Time: serverTimestamp()
         });
-        onRefresh();
+        onRefresh(); // refreshes so that the deleted task doesn't display
     }
-
+    /**
+     * Sends user to edit screen to edit their task.
+     * The changes are then saved to the firebase once they are done.
+     * @param id unique ID of our task in the database.
+     */
     const editTask = (id) => {
+        // Allows route to know what task it is to be displayed on the edit screen
         route.params.tasks = tasks;
         route.params.currentTaskID = id;
         let tags = [];
+        // Allows user to see their custom tags.
         tasks.map(tasks => tasks.selectedTags).forEach(item => item.forEach(item =>
             tags.includes(item.text) ? {} : tags.push(item.text)
         ));
         route.params.tags = tags;
         console.log("Tags? " + tags);
+        // Navigates to edit screen once all the details needed are gotten.
         navigation.navigate('Task Detail', route.params);
-    }
 
+    }
+    /**
+     * Marks a task as complete, so it is not displayed.
+     * Updates the firebase.
+     * @param id unique ID of our task in the database.
+     * @returns {Promise<void>}
+     */
     const completeTask = async (id) => {
         await addDoc(collection(db, "Activity (" + route.params.email + ")"), {
             Action: "COMPLETE",
             TaskID: id,
             Time: serverTimestamp()
         });
-        onRefresh();
+        onRefresh(); // refreshes so the completed task doesn't display
     }
-
+    /**
+     * Sorting function that sorts our tasks by the tag of our choice.
+     * For convenience, the due date is included as a
+     * "tag" so the user can sort by as well.
+     * @param selectedTag the tag the user is sorting by.
+     */
     const sortTasksByTag = (selectedTag) => {
-        const sortedTasks = [...tasks];
+        const sortedTasks = [...tasks]; // Copies tasks to a separate variable as a safety measure
 
-        if (selectedTag === 'Due Date') {
-
+        if (selectedTag === 'Due Date') { // Checks if due date is selected, as it is a different algorithm
+            console.log("due date selected");
             sortedTasks.sort((task1, task2) => {
+                // Parses the dates
+                // stored on the database in a way
+                // so that they can be compared for the comparator function
+                const parseDate = (year, month, day) => {
+                    if (year && month && day) {
+                        const parsedYear = parseInt(year, 10);
+                        const parsedMonth = parseInt(month, 10);
+                        const parsedDay = parseInt(day, 10);
+                        if (!isNaN(parsedYear) && !isNaN(parsedMonth) && !isNaN(parsedDay)) {
+                            return new Date(parsedYear, parsedMonth - 1, parsedDay);
+                        }
+                    }
+                    return null; // Return null if any part of the date is missing or invalid
+                };
 
-                const year1 = parseInt(task1.dueDateYear, 10);
-                const month1 = parseInt(task1.dueDateMonth, 10);
-                const day1 = parseInt(task1.dueDateDay, 10);
+                // Parse dates for task1
+                const date1 = parseDate(task1.dueDateYear, task1.dueDateMonth, task1.dueDateDay);
+                // Parse dates for task2
+                const date2 = parseDate(task2.dueDateYear, task2.dueDateMonth, task2.dueDateDay);
 
-                const year2 = parseInt(task2.dueDateYear, 10);
-                const month2 = parseInt(task2.dueDateMonth, 10);
-                const day2 = parseInt(task2.dueDateDay, 10);
-
-                const date1 = new Date(year1, month1 - 1, day1);
-                const date2 = new Date(year2, month2 - 1, day2);
-
-                if (date1 < date2) {
-                    return -1;
-                } else if (date1 > date2) {
-                    return 1;
+                // Handle cases where either date is null
+                if (date1 === null && date2 === null) {
+                    return 0; // If both dates are null, consider them equal
+                } else if (date1 === null) {
+                    return 1; // Null date (task1) should be considered greater than non-null date (task2)
+                } else if (date2 === null) {
+                    return -1; // Non-null date (task2) should be considered greater than null date (task1)
                 } else {
-                    return 0;
+                    // Compare valid dates
+                    if (date1 < date2) {
+                        return -1;
+                    } else if (date1 > date2) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
                 }
             });
 
         } else {
-
+            // Sorts the tags the "normal" way:
+            // If the task has the tag, it is placed on the top of the list indiscriminately.
             sortedTasks.sort((a, b) => {
-
+                // Grabs tags out of some two tags for our comparator function.
                 const aHasTag = a.selectedTags.some(tag => tag.text === selectedTag);
                 const bHasTag = b.selectedTags.some(tag => tag.text === selectedTag);
-
+                // If they both have this tag, no change is done.
+                // If one of them has it but not the other, they come first.
                 if ((aHasTag && bHasTag) || (!aHasTag && !bHasTag)) {
                     return 0;
                 }
@@ -235,10 +332,19 @@ const HomeScreen = ({navigation, route}) => {
                 return 0;
             });
         }
-
-        setTasks(sortedTasks);
+        sortedTasks.forEach(task => {
+            console.log(`Year: ${task.dueDateYear}, Month: ${task.dueDateMonth}, Day: ${task.dueDateDay}`);
+        });
+        setTasks(sortedTasks); // Sets our sortedTask list to the actual task list to be displayed.
     };
-
+    /**
+     * Our display module for sorting the tags by task.
+     * Courtesy of GitHub user hoaphantn7604.
+     * When selected, the tasks
+     * will sort by that tag.
+     * @returns {JSX.Element}
+     * @constructor
+     */
     const SortField = () => {
         const [value, setValue] = useState(null);
         const [isFocus, setIsFocus] = useState(false);
@@ -254,7 +360,6 @@ const HomeScreen = ({navigation, route}) => {
             return null;
         };
 
-        console.log('Current selected value:', value);
 
         return (
             <View style={styles.sortContainer}>
@@ -277,7 +382,8 @@ const HomeScreen = ({navigation, route}) => {
                         onFocus={() => setIsFocus(true)}
                         onBlur={() => setIsFocus(false)}
                         onChange={item => {
-
+                            {/* When onChange is toggled (the tag is pressed), we call the function to sort the list.*/
+                            }
                             setValue(item.value);
                             setIsFocus(false);
                             sortTasksByTag(item.label);
