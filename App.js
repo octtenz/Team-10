@@ -7,12 +7,17 @@ import TaskDetailScreen from './TaskDetail';
 import ActivityHistoryScreen from './ActivityHistory';
 import AnalysisScreen from './Analysis';
 
+// Create a stack navigator for managing navigation between screens
 const Stack = createStackNavigator();
 
+// Main component for the application
 export default function App() {
   return (
+    // Render navigation container with stack navigator
     <NavigationContainer>
+      {/* Define the initial route for the stack navigator */}
       <Stack.Navigator initialRouteName="Login">
+        {/* Define screens with their respective components */}
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Reset Password" component={ResetPasswordScreen} />
         <Stack.Screen name="Settings" component={SettingScreen} />
