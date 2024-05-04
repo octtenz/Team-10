@@ -1,9 +1,14 @@
 import React from 'react';
-import { View, Text, Modal, TouchableWithoutFeedback, StyleSheet } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, Text, TouchableWithoutFeedback, StyleSheet, Modal } from 'react-native';
 
+/**
+ * Email Popup displays the instructions related to email
+ * @param {*} param0 Object containing modal visibility and close modal function
+ * @returns React element representing the modal window for email instructions
+ */
 const EmailPopup = ({ modalVisible, handleCloseModal }) => {
   return (
+    // Modal for displaying email instructions
     <Modal
       animationType="slide"
       transparent={true}
@@ -12,9 +17,15 @@ const EmailPopup = ({ modalVisible, handleCloseModal }) => {
     >
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
+          {/* Instructions for email address format and verification code */}
           <Text style={styles.modalText}>
             Address to be in ___@___.com format.
+            {'\n\n'}
+            For verification code:
+            {'\n'}
+            Click "Send Verification Code" to resend.
           </Text>
+          {/* Button to close the modal */}
           <TouchableWithoutFeedback onPress={handleCloseModal}>
             <Text style={styles.closeButton}>Close</Text>
           </TouchableWithoutFeedback>
@@ -24,18 +35,19 @@ const EmailPopup = ({ modalVisible, handleCloseModal }) => {
   );
 };
 
+// Styles for the email popup modal
 const styles = StyleSheet.create({
   centeredView: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    flex: 1,
+    justifyContent: 'center',
   },
   modalView: {
+    alignItems: 'center',
     backgroundColor: 'white',
     borderRadius: 20,
     padding: 35,
-    alignItems: 'center',
     width: '80%',
   },
   modalText: {
@@ -43,8 +55,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   closeButton: {
-    marginTop: 10,
     color: 'blue',
+    marginTop: 10,
   },
 });
 
