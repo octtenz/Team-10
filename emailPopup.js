@@ -17,13 +17,9 @@ const EmailPopup = ({ modalVisible, handleCloseModal }) => {
     >
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
-          {/* Instructions for email address format and verification code */}
+          {/* Instructions for email address format */}
           <Text style={styles.modalText}>
             Address to be in ___@___.com format.
-            {'\n\n'}
-            For verification code:
-            {'\n'}
-            Click "Send Verification Code" to resend.
           </Text>
           {/* Button to close the modal */}
           <TouchableWithoutFeedback onPress={handleCloseModal}>
