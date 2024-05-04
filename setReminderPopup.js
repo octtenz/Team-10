@@ -1,9 +1,15 @@
 import React, { useState, useEffect} from 'react';
-import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, Alert } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 
+/**
+ * Set Reminder Screen handles setting notification for the task
+ * @param {*} param0 Object containing parameters
+ * @returns React element representing the modal window for setting notification
+ */
 const SetReminderScreen = ({title}) => {
+  // State variables
   const [modalVisible, setModalVisible] = useState(false);
   const [day, setDay] = useState('');
   const [month, setMonth] = useState('');
@@ -12,37 +18,46 @@ const SetReminderScreen = ({title}) => {
   const [minute, setMinute] = useState('');
   const [notificationPermission, setNotificationPermission] = useState(false);
 
+  // Check notification permissions when the component mounts
   useEffect(() => {
     checkNotificationPermission();
   }, []);
 
+  // Check and set notification permissions
   const checkNotificationPermission = async () => {
     const settings = await Notifications.getPermissionsAsync();
     const status = settings.granted;
     setNotificationPermission(status);
   };
 
+  // Request and set notification permissions
   const requestNotificationPermission = async () => {
     const { granted } = await Notifications.requestPermissionsAsync();
     setNotificationPermission(granted);
   };
 
+  // Add notification for the task
   const addReminder = async () => {
     try {
+      // Check if the title is provided
       if (!title) {
         Alert.alert('Title field is required');
         return;
       }
+
+      // Request notification permission if not granted
       if (!notificationPermission) {
         await requestNotificationPermission();
         if (!notificationPermission) {
-          Alert.alert('Notification Permission Required', 'Please grant permission to set reminders.');
+          Alert.alert('Notification Permission Required');
           return;
         }
       }
   
+      // Check if all input fields are filled
       if (day && month && year && hour && minute) {
         const notificationDate = new Date(year, month - 1, day, hour, minute);
+        // Set notification if the notification date is in the future
         if (notificationDate > Date.now()) {
           console.log('Notification added:', day, month, year, hour, minute);
           await scheduleNotification(notificationDate);
@@ -51,14 +66,18 @@ const SetReminderScreen = ({title}) => {
           Alert.alert('Invalid Date/Time', 'Please select a future date and time.');
         }
       } else {
-        Alert.alert('Incomplete Date/Time', 'Please fill in all fields to set reminders.');
+        Alert.alert('Incomplete Date/Time', 'Please fill in all fields to set notification.');
       }
     } catch (error) {
-      console.error('Error setting reminder:', error.message);
-      Alert.alert('Error', 'Failed to set reminder. Please try again later.');
+      console.error('Error setting notification:', error.message);
+      Alert.alert('Error', 'Failed to set notification. Please try again later.');
     }
   };  
 
+  /**
+   * Schedule notification for the task
+   * @param {*} notificationDate The date and time for the notification
+   */
   const scheduleNotification = async (notificationDate) => {
     await Notifications.scheduleNotificationAsync({
       content: {
@@ -68,13 +87,16 @@ const SetReminderScreen = ({title}) => {
       trigger: { date: notificationDate },
     });
   };
-  
 
   return (
+    // Container for the button to add notifications
     <View style={styles.container}>
+       {/* Button to add notifications */}
       <TouchableOpacity style={styles.button} onPress={() => setModalVisible(true)}>
         <FontAwesome name="bell" size={24} color="white" />
       </TouchableOpacity>
+
+      {/* Modal for setting notifications */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -85,10 +107,12 @@ const SetReminderScreen = ({title}) => {
       >
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
-            <Text style={styles.modalTitle}>Set Reminder</Text>
+            <Text style={styles.modalTitle}>Set Notification</Text>
+            {/* Container for the date of the notification */}
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Date (DD/MM/YYYY):</Text>
               <View style={styles.inputRow}>
+                {/* Input field for the day of the notification date */}
                 <TextInput
                   style={styles.input}
                   placeholder="DD"
@@ -97,6 +121,7 @@ const SetReminderScreen = ({title}) => {
                   keyboardType="numeric"
                   maxLength={2}
                 />
+                {/* Input field for the month of the notification date */}
                 <TextInput
                   style={styles.input}
                   placeholder="MM"
@@ -105,6 +130,7 @@ const SetReminderScreen = ({title}) => {
                   keyboardType="numeric"
                   maxLength={2}
                 />
+                {/* Input field for the year of the notification date */}
                 <TextInput
                   style={styles.input}
                   placeholder="YYYY"
@@ -115,9 +141,12 @@ const SetReminderScreen = ({title}) => {
                 />
               </View>
             </View>
+
+            {/* Container for the time of the notification */}
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Time (HH/MM):</Text>
               <View style={styles.inputRow}>
+                {/* Input field for the hour of the notification time */}
                 <TextInput
                   style={styles.input}
                   placeholder="HH"
@@ -126,6 +155,7 @@ const SetReminderScreen = ({title}) => {
                   keyboardType="numeric"
                   maxLength={2}
                 />
+                {/* Input field for the minute of the notification time */}
                 <TextInput
                   style={styles.input}
                   placeholder="MM"
@@ -136,9 +166,13 @@ const SetReminderScreen = ({title}) => {
                 />
               </View>
             </View>
+
+            {/* Button to set the notification */}
             <TouchableOpacity onPress={addReminder}>
               <FontAwesome name="bell" size={24} color="black" />
             </TouchableOpacity>
+
+            {/* Button to close the modal */}
             <TouchableOpacity onPress={() => setModalVisible(false)}>
               <Text style={styles.closeButton}>Close</Text>
             </TouchableOpacity>
@@ -149,23 +183,31 @@ const SetReminderScreen = ({title}) => {
   );
 };
 
+// Styles for the set reminder screen
 const styles = StyleSheet.create({
   container: {
+    alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
+  },
+  button: {    
     alignItems: 'center',
+    backgroundColor: '#007BFF',
+    borderRadius: 5,
+    padding: 10,
+    width: 50,
   },
   centeredView: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)', 
+    flex: 1,
+    justifyContent: 'center',
   },
   modalView: {
+    alignItems: 'center',
     backgroundColor: 'white',
     borderRadius: 20,
     padding: 35,
-    alignItems: 'center',
     width: '80%',
   },
   modalTitle: {
@@ -176,36 +218,25 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: 20,
   },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   label: {
     fontSize: 16,
     marginBottom: 5,
   },
+  inputRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
   input: {
-    borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
-    padding: 10,
+    borderWidth: 1,
     marginRight: 10,
+    padding: 10,
     width: 60, 
   },
   closeButton: {
-    marginTop: 20,
     color: 'blue',
-  },
-  button: {
-    backgroundColor: '#007BFF',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    width: 50,
-  },
-  buttonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
+    marginTop: 20,
   },
 });
 
