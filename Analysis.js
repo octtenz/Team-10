@@ -6,9 +6,9 @@ const AnalysisScreen = ({ route }) => {
   const [currentPeriodDayData, setCurrentPeriodDayData] = useState([]);
   const [currentPeriodMonthData, setCurrentPeriodMonthData] = useState([]);
   const [currentPeriodYearData, setCurrentPeriodYearData] = useState([]);
+  const [mostProductiveHour, setMostProductiveHour] = useState(null); 
   const [mostProductiveDay, setMostProductiveDay] = useState(null);
   const [mostProductiveMonth, setMostProductiveMonth] = useState(null);
-  const [mostProductiveTimeOfDay, setMostProductiveTimeOfDay] = useState(null); // New state variable
   const [taskCategories, setTaskCategories] = useState([]);
 
   useEffect(() => {
@@ -16,7 +16,7 @@ const AnalysisScreen = ({ route }) => {
       try {
         const today = new Date();
         const currentYear = today.getFullYear();
-        const currentMonth = today.getMonth() + 1; // Month is zero-based, so add 1
+        const currentMonth = today.getMonth() + 1; 
         const currentDay = today.getDate();
   
         const activityRef = FIREBASE_DB.collection("Activity (" + route.params.email + ")");
@@ -29,15 +29,6 @@ const AnalysisScreen = ({ route }) => {
           .get();
         const currentDayData = currentDaySnapshot.docs.map(doc => doc.data());
         setCurrentPeriodDayData(currentDayData);
-  
-        // Calculate most productive time of the day
-        const hoursCountMap = {};
-        currentDayData.forEach(task => {
-          const taskHour = new Date(task.Time.seconds * 1000).getHours();
-          hoursCountMap[taskHour] = (hoursCountMap[taskHour] || 0) + 1;
-        });
-        const mostProductiveHour = Object.keys(hoursCountMap).reduce((a, b) => hoursCountMap[a] > hoursCountMap[b] ? a : b);
-        setMostProductiveTimeOfDay(`${mostProductiveHour}:00`);
   
         // Fetching current period data for the current month
         const currentMonthSnapshot = await activityRef
@@ -57,22 +48,45 @@ const AnalysisScreen = ({ route }) => {
         const currentYearData = currentYearSnapshot.docs.map(doc => doc.data());
         setCurrentPeriodYearData(currentYearData);
   
-        // Calculate most productive day in the current year
+        // Calculate most productive time
+        const hoursCountMap = {};
         const daysCountMap = {};
         const monthsCountMap = {};
         currentYearData.forEach(task => {
+          const taskHour = new Date(task.Time.seconds * 1000).getHours();
           const taskDate = new Date(task.Time.seconds * 1000).getDate();
           const taskMonth = new Date(task.Time.seconds * 1000).getMonth() + 1;
+          if (taskDate === currentDay) {
+            hoursCountMap[taskHour] = (hoursCountMap[taskHour] || 0) + 1;
+          }
           if (taskMonth === currentMonth) {
             daysCountMap[taskDate] = (daysCountMap[taskDate] || 0) + 1;
           }
           monthsCountMap[taskMonth] = (monthsCountMap[taskMonth] || 0) + 1;
         });
-        const mostProductiveDay = Object.keys(daysCountMap).reduce((a, b) => daysCountMap[a] > daysCountMap[b] ? a : b);
+
+        // Calculate most productive hour
+        const mostProductiveHour = Object.keys(hoursCountMap).reduce((a, b) => {
+          return hoursCountMap[a] > hoursCountMap[b] ? a : b;
+        }, null);
+        setMostProductiveHour(`${mostProductiveHour}:00`);
+
+        // Calculate most productive day
+        if (Object.keys(daysCountMap).length > 0) {
+        const mostProductiveDay = Object.keys(daysCountMap).reduce((a, b) => {
+          return daysCountMap[a] > daysCountMap[b] ? a : b;
+        }, null);
         setMostProductiveDay(`${currentMonth}/${mostProductiveDay}/${currentYear}`);
-        const mostProductiveMonth = Object.keys(monthsCountMap).reduce((a, b) => monthsCountMap[a] > monthsCountMap[b] ? a : b);
+        } else {
+          setMostProductiveDay("No data available");
+        }
+
+        // Calculate most productive month
+        const mostProductiveMonth = Object.keys(monthsCountMap).reduce((a, b) => {
+          return monthsCountMap[a] > monthsCountMap[b] ? a : b;
+        }, null);
         setMostProductiveMonth(convertMonthToString(mostProductiveMonth));
-  
+
         // Fetch all tasks from the Task collection
         const tasksSnapshot = await FIREBASE_DB.collection("Task (" + route.params.email + ")").get();
         const tasksData = tasksSnapshot.docs.map(doc => doc.data());
@@ -159,7 +173,7 @@ const AnalysisScreen = ({ route }) => {
             <Text style={[styles.tableHeader, styles.center]}>In Current Year</Text>
           </View>
           <View style={styles.tableRow}>
-            <Text style={[styles.tableCell, styles.center]}>{mostProductiveTimeOfDay}</Text>
+            <Text style={[styles.tableCell, styles.center]}>{mostProductiveHour}</Text>
             <Text style={[styles.tableCell, styles.center]}>{mostProductiveDay}</Text>
             <Text style={[styles.tableCell, styles.center]}>{mostProductiveMonth}</Text>
           </View>
