@@ -1,7 +1,7 @@
 <h3 align="center">Goals and Tasks App</h3>
 <div align="center">
   <a href="https://github.com/octtenz/Team-10/">
-    <img src="assets/title.png" alt="Logo" width="120" height="80">
+    <img src="assets/title.png" alt="Logo" width="200" height="120">
   </a>
   <p align="center">
     A goals and task app to track what you need to do throughout the day.
@@ -37,7 +37,10 @@ To use Firebase successfully, you must create your own Firebase and put the key 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-https://github.com/octtenz/Team-10/blob/main/assets/video.mp4
+<video width="320" height="240" controls>
+  <source src="https://github.com/octtenz/Team-10/blob/main/assets/video.mp4" type="video/mp4">
+</video>
+
 
 
 
