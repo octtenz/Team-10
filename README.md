@@ -38,7 +38,7 @@ To use Firebase successfully, you must create your own Firebase and put the key 
 ## Usage
 
 <video width="320" height="240" controls>
-  <source src="https://github.com/octtenz/Team-10/blob/main/assets/video.mp4" type="video/mp4">
+  <source src="https://github.com/octtenz/Team-10/blob/c459c7f8612822d0ce4b2a42d7384bb958066b77/assets/video.mp4" type="video/mp4">
 </video>
 
 
