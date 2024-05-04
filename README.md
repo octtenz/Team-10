@@ -1,10 +1,10 @@
-<h3 align="center">Goals and Tasks App</h3>
+<h3 align="center">Goal Setting and Notification App</h3>
 <div align="center">
   <a href="https://github.com/octtenz/Team-10/">
     <img src="assets/title.png" alt="Logo" width="200" height="120">
   </a>
   <p align="center">
-    A goals and task app to track what you need to do throughout the day.
+    A goal setting and notification app to track what you need to do throughout the day.
     <br />
 
 
