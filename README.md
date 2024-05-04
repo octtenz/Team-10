@@ -37,8 +37,7 @@ To use Firebase successfully, you must create your own Firebase and put the key 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples, and demos work well in this space. You may also link to more resources.
-
+https://github.com/octtenz/Team-10/blob/main/assets/video.mp4
 
 
 
