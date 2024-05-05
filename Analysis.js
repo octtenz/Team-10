@@ -1,27 +1,42 @@
+/**
+ * Analysis screen component to display analysis data.
+ * @module AnalysisScreen
+ */
+
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { FIREBASE_DB } from './firebase-config';
 
+/**
+ * Analysis screen component.
+ * @param {Object} props - The props object containing route information.
+ * @param {Object} props.route - React Navigation route object containing email.
+ * @returns {JSX.Element} The analysis screen JSX element.
+ */
 const AnalysisScreen = ({ route }) => {
   const [currentPeriodDayData, setCurrentPeriodDayData] = useState([]);
   const [currentPeriodMonthData, setCurrentPeriodMonthData] = useState([]);
   const [currentPeriodYearData, setCurrentPeriodYearData] = useState([]);
-  const [mostProductiveHour, setMostProductiveHour] = useState(null); 
+  const [mostProductiveHour, setMostProductiveHour] = useState(null);
   const [mostProductiveDay, setMostProductiveDay] = useState(null);
   const [mostProductiveMonth, setMostProductiveMonth] = useState(null);
   const [taskCategories, setTaskCategories] = useState([]);
 
+  /**
+   * Fetches analysis data from Firebase.
+   * @async
+   * @function fetchData
+   * @returns {void}
+   */
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetching current period data for the current day
         const today = new Date();
         const currentYear = today.getFullYear();
-        const currentMonth = today.getMonth() + 1; 
+        const currentMonth = today.getMonth() + 1;
         const currentDay = today.getDate();
-  
         const activityRef = FIREBASE_DB.collection("Activity (" + route.params.email + ")");
-  
-        // Fetching current period data for the current day
         const currentDaySnapshot = await activityRef
           .where("Action", "==", "COMPLETE")
           .where("Time", ">=", new Date(currentYear, currentMonth - 1, currentDay))
@@ -29,7 +44,7 @@ const AnalysisScreen = ({ route }) => {
           .get();
         const currentDayData = currentDaySnapshot.docs.map(doc => doc.data());
         setCurrentPeriodDayData(currentDayData);
-  
+        
         // Fetching current period data for the current month
         const currentMonthSnapshot = await activityRef
           .where("Action", "==", "COMPLETE")
@@ -38,7 +53,7 @@ const AnalysisScreen = ({ route }) => {
           .get();
         const currentMonthData = currentMonthSnapshot.docs.map(doc => doc.data());
         setCurrentPeriodMonthData(currentMonthData);
-  
+
         // Fetching current period data for the current year
         const currentYearSnapshot = await activityRef
           .where("Action", "==", "COMPLETE")
@@ -47,7 +62,7 @@ const AnalysisScreen = ({ route }) => {
           .get();
         const currentYearData = currentYearSnapshot.docs.map(doc => doc.data());
         setCurrentPeriodYearData(currentYearData);
-  
+
         // Calculate most productive time
         const hoursCountMap = {};
         const daysCountMap = {};
@@ -73,10 +88,10 @@ const AnalysisScreen = ({ route }) => {
 
         // Calculate most productive day
         if (Object.keys(daysCountMap).length > 0) {
-        const mostProductiveDay = Object.keys(daysCountMap).reduce((a, b) => {
-          return daysCountMap[a] > daysCountMap[b] ? a : b;
-        }, null);
-        setMostProductiveDay(`${currentMonth}/${mostProductiveDay}/${currentYear}`);
+          const mostProductiveDay = Object.keys(daysCountMap).reduce((a, b) => {
+            return daysCountMap[a] > daysCountMap[b] ? a : b;
+          }, null);
+          setMostProductiveDay(`${currentMonth}/${mostProductiveDay}/${currentYear}`);
         } else {
           setMostProductiveDay("No data available");
         }
@@ -90,14 +105,14 @@ const AnalysisScreen = ({ route }) => {
         // Fetch all tasks from the Task collection
         const tasksSnapshot = await FIREBASE_DB.collection("Task (" + route.params.email + ")").get();
         const tasksData = tasksSnapshot.docs.map(doc => doc.data());
-    
+
         // Fetch all activities
         const allActivitiesSnapshot = await activityRef.get();
         const allActivitiesData = allActivitiesSnapshot.docs.map(doc => doc.data());
-    
+
         // Filter out deleted tasks from activity list
         const validActivities = allActivitiesData.filter(activity => activity.Action !== "DELETE");
-    
+
         // Group tasks by tag
         const taskTags = {};
         tasksData.forEach(task => {
@@ -112,7 +127,7 @@ const AnalysisScreen = ({ route }) => {
             });
           }
         });
-  
+
         // Count completed and incomplete tasks for each tag
         const categories = [];
         for (const tag in taskTags) {
@@ -134,9 +149,14 @@ const AnalysisScreen = ({ route }) => {
       }
     };
     fetchData();
-  }, [route.params.email]);  
-  
-  // Function to convert month number to string
+  }, [route.params.email]);
+
+  /**
+   * Converts month number to string.
+   * @function convertMonthToString
+   * @param {number} month - Month number (1-12).
+   * @returns {string} The month name.
+   */
   const convertMonthToString = (month) => {
     const months = [
       'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'
@@ -189,12 +209,12 @@ const AnalysisScreen = ({ route }) => {
             <Text style={[styles.tableHeader, styles.center]}>Incomplete</Text>
           </View>
           {taskCategories.map((category, index) => (
-          <View style={styles.tableRow} key={index}>
-            <Text style={[styles.tableCell, styles.center]}>{category.tag}</Text>
-            <Text style={[styles.tableCell, styles.center]}>{category.completedCount}</Text>
-            <Text style={[styles.tableCell, styles.center]}>{category.incompleteCount}</Text>
-          </View>
-        ))}
+            <View style={styles.tableRow} key={index}>
+              <Text style={[styles.tableCell, styles.center]}>{category.tag}</Text>
+              <Text style={[styles.tableCell, styles.center]}>{category.completedCount}</Text>
+              <Text style={[styles.tableCell, styles.center]}>{category.incompleteCount}</Text>
+            </View>
+          ))}
         </View>
       </View>
     </View>
